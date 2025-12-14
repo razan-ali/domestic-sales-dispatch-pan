@@ -1919,6 +1919,7 @@
         let intransitData = null;
         let cobData = null;
         let holdFreeOrdersProcessed = [];
+        let filteredHoldFreeOrders = []; // Global filtered data for all tabs
         let inventorySummary = {};
         let runningInventory = {};
         let initialInventory = {};
@@ -2945,9 +2946,12 @@
             };
         }
         function displayOrderDetails() {
+            // Initialize filtered data with all orders (no filters applied initially)
+            filteredHoldFreeOrders = holdFreeOrdersProcessed;
+
             displayInventoryStatus('initialInventoryStatus', initialInventory);
             initializeFilters();
-            displayFilteredOrders(holdFreeOrdersProcessed);
+            displayFilteredOrders(filteredHoldFreeOrders);
             displayInventoryStatus('finalInventoryStatus', runningInventory);
         }
 
@@ -3002,7 +3006,7 @@
 
         function exportOrderDetails() {
             let csvContent = "Order #,Release Date,Order Number,Customer #,COB,Org Code,Shipping Status,Shipping Instruction,UOM,Item,Original Order Qty,Qty MT,Aramco or Not,Stock Status,Comments,Action For,Jeddah Stock,Riyadh Stock,Dammam Stock,Abha Stock\n";
-            holdFreeOrdersProcessed.forEach((order, index) => {
+            filteredHoldFreeOrders.forEach((order, index) => {
                 const releaseDate = parseDate(getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']));
                 const orderNumber = getColumnValue(order, ['ORDER_NO', 'ORDER_NUMBER', 'Order Number', 'ORDER NUMBER']) || '';
                 const customer = getColumnValue(order, ['CUSTOMER_NAME', 'Customer Name', 'CUSTOMER']) || '';
@@ -3094,7 +3098,7 @@
                 };
             });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
 
@@ -3164,7 +3168,7 @@
                 };
             });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
 
@@ -3275,7 +3279,7 @@
                 };
             });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
 
@@ -3378,7 +3382,7 @@
             }
 
             const rawActions = new Set();
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 if (!hasTargetComment(order)) return;
                 const action = (order['Action For'] ?? '').toString().trim();
                 if (action) rawActions.add(action);
@@ -3399,7 +3403,7 @@
             const data = {};
             actualCOBs.forEach(cob => { data[cob] = Object.fromEntries(actionCols.map(a => [a, 0])); });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 if (!hasTargetComment(order)) return;
 
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
@@ -3450,7 +3454,7 @@
             const data = {};
             actualCOBs.forEach(c => data[c] = { available: 0, notAvailable: 0 });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
                 if (!actualCOBs.includes(cob)) return;
@@ -3477,7 +3481,7 @@
             const acc = {};
             actualCOBs.forEach(c => acc[c] = [0, 0, 0, 0, 0]);
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
                 if (!actualCOBs.includes(cob)) return;
@@ -3505,7 +3509,7 @@
             const acc = {};
             actualCOBs.forEach(c => acc[c] = [0, 0, 0, 0, 0, 0]);
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
                 if (!actualCOBs.includes(cob)) return;
@@ -3532,7 +3536,7 @@
         function buildVolumeByWarehouseData() {
             const locs = ['Jeddah', 'Riyadh', 'Dammam', 'Abha'];
             const sums = { Jeddah: 0, Riyadh: 0, Dammam: 0, Abha: 0 };
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredHoldFreeOrders.forEach(order => {
                 const comments = (order['Comments'] || '').toString().trim();
                 if (comments !== 'Logistics to Ship') return;
                 const action = (order['Action For'] || '').toString().trim();
@@ -3960,9 +3964,20 @@
                 aramcoOrNot: document.getElementById('filterAramcoOrNot')?.value || ''
             };
 
-            const filteredOrders = filterOrders();
-            displayFilteredOrders(filteredOrders);
-            updateFilterCount(filteredOrders.length);
+            // Update global filtered data
+            filteredHoldFreeOrders = filterOrders();
+
+            // Update Order Details tab
+            displayFilteredOrders(filteredHoldFreeOrders);
+            updateFilterCount(filteredHoldFreeOrders.length);
+
+            // Update Tables tab
+            generateAnalysisTables();
+
+            // Update Dashboard/Charts tab
+            if (cobData) {
+                updateCharts();
+            }
         }
 
         function filterOrders() {
@@ -4168,8 +4183,20 @@
                 aramcoOrNot: ''
             };
 
-            displayFilteredOrders(holdFreeOrdersProcessed);
+            // Update global filtered data to show all orders
+            filteredHoldFreeOrders = holdFreeOrdersProcessed;
+
+            // Update Order Details tab
+            displayFilteredOrders(filteredHoldFreeOrders);
             updateFilterCount();
+
+            // Update Tables tab
+            generateAnalysisTables();
+
+            // Update Dashboard/Charts tab
+            if (cobData) {
+                updateCharts();
+            }
         }
         // ETA Items Management
         let etaItemsModified = false;
