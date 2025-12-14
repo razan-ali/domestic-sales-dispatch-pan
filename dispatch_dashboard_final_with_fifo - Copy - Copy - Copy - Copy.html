@@ -1,0 +1,4355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Plan Dashboard - FIFO Allocation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            padding: 24px 28px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            margin-bottom: 30px;
+        }
+
+        .header-row {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            column-gap: 16px;
+        }
+
+        .brand-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: #fff;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .06), inset 0 0 0 1px rgba(0, 0, 0, .06);
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 2rem;
+            line-height: 1.15;
+            letter-spacing: -0.01em;
+            color: #1f2937;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            margin: 6px 0 0 0;
+            font-size: 0.975rem;
+            color: #6b7280;
+        }
+
+        /* Tab Navigation */
+        .tab-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            background: #f7fafc;
+        }
+
+        .tab-button.active {
+            color: #006837;
+            background: #edf2f7;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+        }
+
+        .upload-box:hover {
+            border-color: #006837;
+            background: #edf2f7;
+        }
+
+        .upload-box.loaded {
+            border-color: #f6a800;
+            background: #f0fff4;
+        }
+
+        .upload-label {
+            display: block;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        .file-name {
+            color: #f6a800;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .process-button {
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .process-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .process-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            border-radius: 10px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .stat-card.not-released {
+            background: linear-gradient(135deg, #f6a800 0%, #00994c 100%);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-detail {
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        /* Section Titles */
+        .section-title {
+            color: #2d3748;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        /* ===========================================
+           ENHANCED FILTER CONTROLS - MAIN STYLES
+        =========================================== */
+        .filters-container {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #cbd5e0;
+        }
+
+        .filter-title {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-title::before {
+            content: '🔍';
+            font-size: 1.2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Icon display for labels */
+        .filter-label[data-icon]::before {
+            content: attr(data-icon);
+            margin-right: 4px;
+            font-size: 0.9rem;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 10px 12px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: white;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+
+        .filter-input:hover,
+        .filter-select:hover {
+            border-color: #a0aec0;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: #006837;
+            box-shadow: 0 0 0 3px rgba(0, 104, 55, 0.15);
+            background: #f7fafc;
+        }
+
+        .filter-input::placeholder {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .filter-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .date-range-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .date-range-group input {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+
+        .numeric-range-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .numeric-range-group input {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 2px solid #cbd5e0;
+        }
+
+        .filter-count {
+            font-size: 0.9rem;
+            color: #2d3748;
+            font-weight: 700;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 2px solid #cbd5e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-count::before {
+            content: '📊';
+            font-size: 1.1rem;
+        }
+
+        .clear-filters-btn {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 4px rgba(229, 62, 62, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clear-filters-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(229, 62, 62, 0.4);
+        }
+
+        .clear-filters-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .clear-filters-btn:disabled {
+            background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        /* Order Details Section */
+        .order-details-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #f6a800 0%, #f6a800 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        /* Inventory Status */
+        .inventory-status-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .inventory-status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .inventory-location-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .location-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.85rem;
+        }
+
+        .inventory-label {
+            color: #718096;
+        }
+
+        .inventory-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            color: white;
+        }
+
+        th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .order-details-table {
+            width: 100%;
+            font-size: 0.75rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-details-table th {
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            color: white;
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .order-details-table td {
+            padding: 6px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.7rem;
+        }
+
+        .stock-available-cell {
+            background: #c6f6d5;
+            color: #22543d;
+            font-weight: 600;
+        }
+
+        .stock-insufficient-cell {
+            background: #fed7d7;
+            color: #742a2a;
+            font-weight: 600;
+        }
+
+        .bulk-order-cell {
+            background: #feebc8;
+            color: #744210;
+            font-weight: 600;
+        }
+
+        .picked-cell {
+            background: #e6f4ea;
+            color: #2c5282;
+            font-weight: 600;
+        }
+
+        /* Analysis Tables */
+        .analysis-table {
+            width: 100%;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .analysis-table th {
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .analysis-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .analysis-table .total-row {
+            background: #f7fafc;
+            font-weight: bold;
+        }
+
+        .analysis-table .petromin-row {
+            background-color: #fffbeb;
+        }
+
+        .table-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-title {
+            color: #2d3748;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        /* Inventory Section */
+        .inventory-section {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .zero-qty {
+            color: #cbd5e0;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .positive-qty {
+            color: #f6a800;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .intransit-qty {
+            color: #006837;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .th.group-header {
+            background: #006837;
+            text-align: center;
+            font-size: 0.75rem;
+            padding: 6px;
+        }
+
+        /* Charts */
+        .charts-container {
+            display: none;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .chart-box {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            color: #2d3748;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .chart-canvas-container {
+            position: relative;
+            height: 400px;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1400px) {
+            .filters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .filters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filter-actions {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+            .clear-filters-btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .brand-badge {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+            }
+
+            .brand-logo {
+                width: 38px;
+                height: 38px;
+            }
+
+            .page-title {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Special styling for dual-input filter groups (dates and numeric ranges) */
+        .filter-group-wide {
+            grid-column: span 2;
+        }
+
+        /* Ensure they don't break on smaller screens */
+        @media (max-width: 768px) {
+            .filter-group-wide {
+                grid-column: span 1;
+            }
+        }
+
+        .aramco-cell {
+            background: #c6f6d5;
+            color: #22543d;
+            font-weight: 600;
+        }
+
+        .not-aramco-cell {
+            background: #e2e8f0;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        /* ============================================
+           EXCEL-STYLE FILTER DROPDOWNS WITH CHECKBOXES
+        ============================================ */
+        .inclusion-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .inclusion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .inclusion-title {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .inclusion-title::before {
+            content: '🎯';
+            font-size: 1.6rem;
+        }
+
+        .inclusion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .inclusion-category {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .inclusion-category-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .inclusion-category-title-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .inclusion-count {
+            font-size: 0.75rem;
+            color: #718096;
+            font-weight: 600;
+            background: #edf2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* Excel-style dropdown container */
+        .excel-filter-container {
+            position: relative;
+        }
+
+        .excel-filter-button {
+            width: 100%;
+            padding: 10px 12px;
+            background: white;
+            border: 2px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .excel-filter-button:hover {
+            border-color: #006837;
+            background: #f7fafc;
+        }
+
+        .excel-filter-button.active {
+            border-color: #006837;
+            background: #f7fafc;
+        }
+
+        .excel-filter-button-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #4a5568;
+        }
+
+        .excel-filter-arrow {
+            font-size: 0.7rem;
+            color: #718096;
+            transition: transform 0.2s;
+        }
+
+        .excel-filter-button.active .excel-filter-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown panel */
+        .excel-filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 4px;
+            background: white;
+            border: 2px solid #006837;
+            border-radius: 6px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            max-height: 300px;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .excel-filter-dropdown.show {
+            display: flex;
+        }
+
+        /* Search box */
+        .excel-filter-search {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .excel-filter-search input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .excel-filter-search input:focus {
+            outline: none;
+            border-color: #006837;
+        }
+
+        /* Select all option */
+        .excel-filter-select-all {
+            padding: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            background: #f7fafc;
+        }
+
+        .excel-filter-select-all label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #2d3748;
+        }
+
+        .excel-filter-select-all input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        /* Options list */
+        .excel-filter-options {
+            overflow-y: auto;
+            max-height: 200px;
+            padding: 5px;
+        }
+
+        .excel-filter-option {
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-radius: 4px;
+        }
+
+        .excel-filter-option:hover {
+            background: #edf2f7;
+        }
+
+        .excel-filter-option label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        .excel-filter-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #006837;
+        }
+
+        .inclusion-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .select-all-btn,
+        .clear-selection-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .select-all-btn {
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            color: white;
+        }
+
+        .select-all-btn:hover {
+            background: linear-gradient(135deg, #00994c 0%, #007a3d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 104, 55, 0.4);
+        }
+
+        .clear-selection-btn {
+            background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+            color: #2d3748;
+        }
+
+        .clear-selection-btn:hover {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            transform: translateY(-2px);
+        }
+
+        .inclusion-summary {
+            background: #e6f4ea;
+            border: 2px solid #006837;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .inclusion-summary-text {
+            color: #22543d;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        footer .footer-bottom {
+            display: none !important;
+        }
+
+        .static-top.navbar-dark {
+            display: none !important;
+        }
+
+        /* ETA Items Management Section */
+        .eta-items-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .eta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .eta-header:hover {
+            background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+            border-color: #cbd5e0;
+        }
+
+        .eta-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2d3748;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .eta-header-title::before {
+            content: '📦';
+            font-size: 1.3rem;
+        }
+
+        .eta-toggle-icon {
+            font-size: 1.2rem;
+            color: #718096;
+            transition: transform 0.3s ease;
+        }
+
+        .eta-toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .eta-content {
+            display: none;
+            padding: 25px 15px 15px 15px;
+        }
+
+        .eta-content.show {
+            display: block;
+        }
+
+        .eta-info {
+            background: #e6f4ea;
+            border-left: 4px solid #006837;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #22543d;
+        }
+
+        .eta-controls {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: end;
+        }
+
+        .eta-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .eta-input-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .eta-input {
+            padding: 10px 12px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: white;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+
+        .eta-input:focus {
+            outline: none;
+            border-color: #006837;
+            box-shadow: 0 0 0 3px rgba(0, 104, 55, 0.15);
+        }
+
+        .eta-add-btn {
+            background: linear-gradient(135deg, #006837 0%, #00994c 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            height: fit-content;
+        }
+
+        .eta-add-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #00994c 0%, #007a3d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 104, 55, 0.4);
+        }
+
+        .eta-add-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .eta-items-container {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .eta-items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .eta-item-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            color: #2d3748;
+            transition: all 0.2s ease;
+        }
+
+        .eta-item-chip:hover {
+            border-color: #006837;
+            background: #f0fff4;
+        }
+
+        .eta-item-code {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .eta-item-delete {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+            transition: all 0.2s ease;
+        }
+
+        .eta-item-delete:hover {
+            color: #c53030;
+            transform: scale(1.2);
+        }
+
+        .eta-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #edf2f7;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .eta-stat {
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        .eta-stat strong {
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .eta-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .eta-reprocess-btn {
+            background: linear-gradient(135deg, #f6a800 0%, #e59400 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .eta-reprocess-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #e59400 0%, #cc8400 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(246, 168, 0, 0.4);
+        }
+
+        .eta-reprocess-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .eta-clear-btn {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .eta-clear-btn:hover {
+            background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(229, 62, 62, 0.4);
+        }
+
+        .eta-empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #718096;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-row">
+                <div class="brand-badge">
+                    <img class="brand-logo"
+                        src="https://media.licdn.com/dms/image/D4E0BAQFlrP0rYBluLQ/company-logo_200_200/0/1684497488806?e=2147483647&v=beta&t=NTGxPJFUw_eT54zjg__T4fsDXcmXJLkXlnJYwDrewrg"
+                        alt="Petrolube" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                </div>
+                <div class="header-text">
+                    <h1 class="page-title">Dispatch Plan Dashboard</h1>
+                    <p class="subtitle">Upload Excel files to analyze orders with sequential FIFO stock allocation</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <h2 class="section-title">Upload Files</h2>
+            <div class="upload-grid">
+                <div class="upload-box" id="ordersUploadBox">
+                    <label class="upload-label" for="ordersFile">
+                        📋 Outstanding Orders
+                        <input type="file" id="ordersFile" class="upload-input" accept=".xlsx,.xls">
+                    </label>
+                    <p style="color: #718096; font-size: 0.85rem;">Order details file</p>
+                    <div class="file-name" id="ordersFileName"></div>
+                </div>
+
+                <div class="upload-box" id="inventoryUploadBox">
+                    <label class="upload-label" for="inventoryFile">
+                        📦 On Hand Inventory
+                        <input type="file" id="inventoryFile" class="upload-input" accept=".xlsx,.xls">
+                    </label>
+                    <p style="color: #718096; font-size: 0.85rem;">Current stock levels</p>
+                    <div class="file-name" id="inventoryFileName"></div>
+                </div>
+
+                <div class="upload-box" id="intransitUploadBox">
+                    <label class="upload-label" for="intransitFile">
+                        🚚 In-Transit Report
+                        <input type="file" id="intransitFile" class="upload-input" accept=".xlsx,.xls">
+                    </label>
+                    <p style="color: #718096; font-size: 0.85rem;">Pending shipments</p>
+                    <div class="file-name" id="intransitFileName"></div>
+                </div>
+            </div>
+
+            <!-- Inclusion Filter Section -->
+            <div class="inclusion-section" id="inclusionSection">
+                <div class="inclusion-header">
+                    <h3 class="inclusion-title">Filter Data (Inclusion)</h3>
+                </div>
+
+                <div class="inclusion-grid" id="inclusionGrid">
+                    <!-- Will be populated dynamically -->
+                </div>
+
+                <div class="inclusion-summary" id="inclusionSummary">
+                    <p class="inclusion-summary-text" id="inclusionSummaryText"></p>
+                </div>
+
+                <div class="inclusion-actions">
+                    <button class="select-all-btn" onclick="selectAllInclusions()">Select All</button>
+                    <button class="clear-selection-btn" onclick="clearAllInclusions()">Clear Selection</button>
+                </div>
+            </div>
+            <!-- ETA Items Management Section - ADD THIS NEW SECTION -->
+            <div class="eta-items-section">
+                <div class="eta-header" onclick="toggleEtaSection()">
+                    <div class="eta-header-title">
+                        3rd Party Products (ETA Items)
+                        <span class="eta-count" id="etaCount">(0 items)</span>
+                    </div>
+                    <span class="eta-toggle-icon" id="etaToggleIcon">▼</span>
+                </div>
+
+                <div class="eta-content" id="etaContent">
+                    <div class="eta-info">
+                        ℹ️ These product codes will show "ETA: TBC" instead of "ERD: TBC" when stock is not available.
+                        Changes will require reprocessing the allocation.
+                    </div>
+
+                    <div class="eta-controls">
+                        <div class="eta-input-group">
+                            <label class="eta-input-label">Add Product Code</label>
+                            <input type="text" id="etaItemInput" class="eta-input"
+                                placeholder="Enter product code (e.g., 54400095)"
+                                onkeypress="if(event.key==='Enter') addEtaItem()">
+                        </div>
+                        <button class="eta-add-btn" onclick="addEtaItem()">
+                            ➕ Add Item
+                        </button>
+                    </div>
+
+                    <div class="eta-stats">
+                        <div class="eta-stat">
+                            Total Items: <strong id="etaTotalCount">0</strong>
+                        </div>
+                        <div class="eta-stat">
+                            Modified: <strong id="etaModifiedStatus">No</strong>
+                        </div>
+                    </div>
+
+                    <div class="eta-items-container">
+                        <div class="eta-items-grid" id="etaItemsGrid">
+                            <!-- Items will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="eta-actions">
+                        <button class="eta-clear-btn" onclick="clearAllEtaItems()">
+                            🗑️ Clear All
+                        </button>
+                        <button class="eta-reprocess-btn" onclick="reprocessWithNewEtaItems()" id="etaReprocessBtn"
+                            disabled>
+                            🔄 Reprocess Allocation
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="processButton" class="process-button" disabled>Process Data</button>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-container" id="tabContainer" style="display: none;">
+            <div class="tab-nav">
+                <button class="tab-button active" onclick="switchTab('tables')">Tables</button>
+                <button class="tab-button" onclick="switchTab('charts')">Dashboard</button>
+                <button class="tab-button" onclick="switchTab('orderDetails')">Order Details</button>
+                <button class="tab-button" onclick="switchTab('dashboard')">On-Hand & In-Transit Stock</button>
+            </div>
+
+            <!-- Dashboard Tab Content -->
+            <div id="dashboardTab" class="tab-content">
+                <div class="stats-section" id="statsSection" style="display: block;">
+                    <h2 class="section-title">Order Summary</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Released Orders</div>
+                            <div class="stat-value" id="releasedCount">0</div>
+                            <div class="stat-detail" id="releasedMT">0 MT</div>
+                        </div>
+                        <div class="stat-card not-released">
+                            <div class="stat-label">Not Released Orders</div>
+                            <div class="stat-value" id="notReleasedCount">0</div>
+                            <div class="stat-detail" id="notReleasedMT">0 MT</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Orders</div>
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-detail" id="totalMT">0 MT</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inventory-section" id="inventorySection" style="display: block;">
+                    <h2 class="section-title">Combined Inventory Matrix (On-Hand + In-Transit)</h2>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f6a800;"></div>
+                            <span><strong>On-Hand:</strong> Current stock in sub-inventories</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #006837;"></div>
+                            <span><strong>In-Transit:</strong> Pending shipments to org codes</span>
+                        </div>
+                    </div>
+                    <div class="matrix-scroll" style="max-height: 700px; overflow: auto;">
+                        <div class="table-container">
+                            <table class="matrix-table" id="inventoryMatrix">
+                                <thead id="matrixHead">
+                                </thead>
+                                <tbody id="matrixBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables Tab Content -->
+            <div id="tablesTab" class="tab-content active">
+                <!-- COB Summary Table -->
+                <div class="table-section">
+                    <h3 class="table-title">COB Summary - Orders on Credit Hold vs Hold Free</h3>
+                    <table class="analysis-table" id="cobMainTable">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Orders on Credit Hold</th>
+                                <th>Hold Free Orders</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cobMainTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Stock Availability Table -->
+                <div class="table-section">
+                    <h3 class="table-title">Stock Availability Analysis</h3>Transformer Oil
+                    <table class="analysis-table" id="stockAvailabilityTable">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Stock Available for Shipping</th>
+                                <th>Stock Not Available</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockAvailabilityBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Status of Hold Free Orders - Stock NOT Available -->
+                <div class="table-section">
+                    <h3 class="table-title">Status of Hold Free Orders for which Stock is Not Available</h3>
+                    <table class="analysis-table" id="stockNotAvailableTable">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>ITO/ITS Grades</th>
+                                <th>Hold by Sales</th>
+                                <th>Transformer Oil</th>
+                                <th>BULK Order</th>
+                                <th>Order to Be Cancelled</th>
+                                <th>Net Shortfall Requiring Action</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockNotAvailableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Status of Hold Free Orders - Stock Available -->
+                <div class="table-section">
+                    <h3 class="table-title">Status of Hold Free Orders for which Stock is Available</h3>
+                    <table class="analysis-table" id="stockAvailableStatusTable">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Picked</th>
+                                <th>To be Picked</th>
+                                <th>In-transit / Under Production</th>
+                                <th>BULK Order</th>
+                                <th>Self-Collection</th>
+                                <th>Hold by Sales</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockAvailableStatusBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Volume available to ship by Respective warehouse -->
+                <div class="table-section">
+                    <h3 class="table-title">Volume available to ship by Respective warehouse</h3>
+                    <table class="analysis-table" id="actionForTable">
+                        <thead id="actionForHead"></thead>
+                        <tbody id="actionForBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Order Details Tab Content -->
+            <div id="orderDetailsTab" class="tab-content">
+                <div class="order-details-section">
+                    <h2 class="section-title">
+                        Hold Free Orders - Sequential FIFO Allocation
+                        <button class="export-button" onclick="exportOrderDetails()">Export to CSV</button>
+                    </h2>
+
+                    <!-- FILTERS SECTION -->
+                    <div class="filters-container">
+                        <div class="filter-header">
+                            <h3 class="filter-title">Filter Orders</h3>
+                            <button class="clear-filters-btn" id="clearFiltersBtn" onclick="clearAllFilters()" disabled>
+                                Clear All Filters
+                            </button>
+                        </div>
+
+                        <div class="filters-grid">
+                            <!-- Release Date Filter -->
+                            <div class="filter-group filter-group-wide">
+                                <label class="filter-label" data-icon="📅">Release Date</label>
+                                <div class="date-range-group">
+                                    <input type="date" id="filterReleaseDateFrom" class="filter-input" title="From Date"
+                                        placeholder="From">
+                                    <input type="date" id="filterReleaseDateTo" class="filter-input" title="To Date"
+                                        placeholder="To">
+                                </div>
+                            </div>
+
+                            <!-- Order Number Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="📋">Order Number</label>
+                                <input type="text" id="filterOrderNumber" class="filter-input"
+                                    placeholder="Search order number...">
+                            </div>
+
+                            <!-- Customer # Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="👤">Customer #</label>
+                                <input type="text" id="filterCustomer" class="filter-input"
+                                    placeholder="Search customer...">
+                            </div>
+
+                            <!-- COB Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="🏢">COB</label>
+                                <select id="filterCOB" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+
+                            <!-- Org Code Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="🏭">Org Code</label>
+                                <select id="filterOrgCode" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+
+                            <!-- Shipping Status Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="📦">Shipping Status</label>
+                                <select id="filterShippingStatus" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+
+                            <!-- Shipping Instruction Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="📝">Shipping Instruction</label>
+                                <input type="text" id="filterShippingInstruction" class="filter-input"
+                                    placeholder="Search instruction...">
+                            </div>
+
+                            <!-- UOM Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="⚖️">UOM</label>
+                                <select id="filterUOM" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+
+                            <!-- Item Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="🔢">Item</label>
+                                <input type="text" id="filterItem" class="filter-input"
+                                    placeholder="Search item number...">
+                            </div>
+
+                            <!-- Qty MT Range Filter -->
+                            <div class="filter-group filter-group-wide">
+                                <label class="filter-label" data-icon="⚡">Qty (MT)</label>
+                                <div class="numeric-range-group">
+                                    <input type="number" id="filterQtyMin" class="filter-input" placeholder="Min"
+                                        step="0.01" title="Minimum Quantity">
+                                    <input type="number" id="filterQtyMax" class="filter-input" placeholder="Max"
+                                        step="0.01" title="Maximum Quantity">
+                                </div>
+                            </div>
+
+                            <!-- Stock Status Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="📊">Stock Status</label>
+                                <select id="filterStockStatus" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+
+                            <!-- Comments Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="💬">Comments</label>
+                                <select id="filterComments" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+
+                            <!-- Action For Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="🎯">Action For</label>
+                                <select id="filterActionFor" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+
+                            <!-- Aramco or Not Filter -->
+                            <div class="filter-group">
+                                <label class="filter-label" data-icon="🏭">Aramco or Not</label>
+                                <select id="filterAramcoOrNot" class="filter-select">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="filter-actions">
+                            <div class="filter-count" id="filterCount">Showing 0 of 0 orders</div>
+                        </div>
+                    </div>
+
+                    <!-- Initial Inventory Status -->
+                    <div class="inventory-status-section">
+                        <h3 style="color: #2d3748; font-size: 1.2rem; margin-bottom: 10px;">Initial Inventory Status
+                        </h3>
+                        <div class="inventory-status-grid" id="initialInventoryStatus"></div>
+                    </div>
+
+                    <!-- Orders Table -->
+                    <div class="table-container" style="margin-top: 20px;">
+                        <table class="order-details-table" id="orderDetailsTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Release Date</th>
+                                    <th>Order Number</th>
+                                    <th>Customer #</th>
+                                    <th>COB</th>
+                                    <th>Org Code</th>
+                                    <th>Shipping Status</th>
+                                    <th>Shipping Instruction</th>
+                                    <th>UOM</th>
+                                    <th>Item</th>
+                                    <th>Original Order Qty</th>
+                                    <th>Qty (MT)</th>
+                                    <th>Aramco or Not</th>
+                                    <th>Stock Status</th>
+                                    <th>Comments</th>
+                                    <th>Action For</th>
+                                    <th>Jeddah Stock</th>
+                                    <th>Riyadh Stock</th>
+                                    <th>Dammam Stock</th>
+                                    <th>Abha Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderDetailsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Final Inventory Status -->
+                    <div class="inventory-status-section" style="margin-top: 30px;">
+                        <h3 style="color: #2d3748; font-size: 1.2rem; margin-bottom: 10px;">Final Inventory Status
+                            (After All Allocations)</h3>
+                        <div class="inventory-status-grid" id="finalInventoryStatus"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Tab Content -->
+            <div id="chartsTab" class="tab-content">
+                <div class="charts-container" id="chartsContainer">
+                    <!-- Charts Grid -->
+                    <div class="chart-grid">
+                        <div class="chart-box">
+                            <h3 class="chart-title">COB-wise Quantity Distribution</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="stackedBarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-box">
+                            <h3 class="chart-title">Credit Hold Orders by COB</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="creditHoldPieChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-box">
+                            <h3 class="chart-title">Hold Free Orders by COB</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="holdFreePieChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-box">
+                            <h3 class="chart-title">Total Orders Distribution by COB</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="totalDonutChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Stock Availability Analysis (Available vs Not Available by COB) -->
+                        <div class="chart-box">
+                            <h3 class="chart-title">Stock Availability Analysis</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="stockAvailabilityChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Status of Hold Free Orders - Stock NOT Available (five buckets) -->
+                        <div class="chart-box">
+                            <h3 class="chart-title">Hold Free – Stock Not Available (Status Breakdown)</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="notAvailableStatusChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Status of Hold Free Orders - Stock Available (six buckets) -->
+                        <div class="chart-box">
+                            <h3 class="chart-title">Hold Free – Stock Available (Status Breakdown)</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="availableStatusChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Volume available to ship by respective warehouse -->
+                        <div class="chart-box">
+                            <h3 class="chart-title">Volume Available to Ship by Warehouse</h3>
+                            <div class="chart-canvas-container">
+                                <canvas id="volumeByWarehouseChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="no-data-message" id="noDataMessage" style="display: none;">
+                    <p>No data available for charts. Please upload and process files first.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include SheetJS library -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let ordersData = null;
+        let inventoryData = null;
+        let intransitData = null;
+        let cobData = null;
+        let holdFreeOrdersProcessed = [];
+        let inventorySummary = {};
+        let runningInventory = {};
+        let initialInventory = {};
+        let charts = {};
+
+        let inclusionCriteria = {
+            orderNumbers: new Set(),
+            customerNumbers: new Set(),
+            cobs: new Set(),
+            orgCodes: new Set(),
+            uoms: new Set(),
+            items: new Set(),
+            aramcoStatus: new Set()
+        };
+
+        // Preferred COB order
+        const preferredCOBs = [
+            'Government',
+            'Gulf Commercial',
+            'Gulf Industry',
+            'Petromin Commercial',
+            'Petromin Industry'
+        ];
+
+        // This will be populated dynamically based on actual data
+        let actualCOBs = [];
+
+        const orgMapping = {
+            'JE0': { subInvs: ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL'], location: 'Jeddah' },
+            'JED': { subInvs: ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL'], location: 'Jeddah' },
+            'RY0': { subInvs: ['RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL'], location: 'Riyadh' },
+            'RYD': { subInvs: ['RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL'], location: 'Riyadh' },
+            'JU0': { subInvs: ['UFGP', 'UEXP', 'UFPE'], location: 'Dammam' },
+            'JUB': { subInvs: ['UFGP', 'UEXP', 'UFPE'], location: 'Dammam' },
+            'AFG': { subInvs: ['AFGP', 'AFPE'], location: 'Abha' },
+            'DMM': { subInvs: ['AFGP', 'AFPE'], location: 'Abha' }
+        };
+        // Special items that should show "ETA: TBC" instead of "ERD: TBC" when stock is not available
+        const etaItems = new Set([
+            '54400095', '54810095', '15610056', '38712119', '38712158', '60570090', '60577090', '60800090',
+            '15560157', '15660157', '59410085', '59510085', '59580085', '59710085', '59780085', '57210035',
+            '11630157', '15610156', '15670156', '15690056', '15770056', '29640157', '38720158', '39040157',
+            '46090035', '11030085', '11030163', '11050163', '11050663', '12020078', '12020085', '12020163',
+            '43300490', '43500478', '43510090', '43980078', '43980085', '51310059', '56010035', '56010078',
+            '56410010', '56410081', '56410610', '56510010', '56510081', '56510810', '56514210', '58010059',
+            '58900035', '58980035', '59010035', '59239063', '59410162', '59439063', '59900057', '59910078',
+            '59510078', '43300478', '43500472', '59410163', '59510163', '59510663', '59510685', '59565085',
+            '57510048', '58410060', '3380049', '14980035', '14980078', '16780035', '16880026', '17280035',
+            '17380078', '17480035', '17480078', '17580035', '17580078', '17680035', '17680078', '17780035',
+            '17780078', '18480035', '21080035', '21080078', '25980035', '34980035', '37480035', '37980035',
+            '39780035', '39780078', '46480035', '46480078', '54430184', '54440089', '84570080', '87981080',
+            'PN117078', 'PN118078', 'PN295078', 'PN400078', '53610095', '54210035', '54810035', '32400095',
+            '1524033', '48040039', '48060031', '57310032', '57940078', '49020038', '52210035', '58510085',
+            '5000031', '57810042', '14180035', '18080035', '30244419', '36010035', '39413090', '50744419',
+            '11842457', '11844457', '15544457', '15642456', '29644458', '30444419', '31100095', '33144457',
+            '34800157', '35800035', '38544419', '38544458', '49610038', '50344419', '1510016', '1530016',
+            '1540066', '1550049', '20670035', '21512025', '28730107', '31090035', '36090035', '45060035',
+            '45070036', '45090035', '46060035', '48090038', '48170035', '51812035', '51814035', '51815035',
+            '54440036', '58910035', '45050035', '54490038', '59030157'
+        ]);
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            const panelId = {
+                dashboard: 'dashboardTab',
+                charts: 'chartsTab',
+                tables: 'tablesTab',
+                orderDetails: 'orderDetailsTab'
+            }[tabName];
+
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach((btn, idx) => {
+                if ((tabName === 'tables' && idx === 0) ||
+                    (tabName === 'charts' && idx === 1) ||
+                    (tabName === 'orderDetails' && idx === 2) ||
+                    (tabName === 'dashboard' && idx === 3)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (panelId) document.getElementById(panelId).classList.add('active');
+
+            if (tabName === 'charts' && cobData) updateCharts();
+        }
+
+        document.getElementById('ordersFile').addEventListener('change', async function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('ordersFileName').textContent = `✓ ${file.name}`;
+                document.getElementById('ordersUploadBox').classList.add('loaded');
+                await loadInclusionOptions(file);
+                checkReadyToProcess();
+            }
+        });
+
+        document.getElementById('inventoryFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('inventoryFileName').textContent = `✓ ${file.name}`;
+                document.getElementById('inventoryUploadBox').classList.add('loaded');
+                checkReadyToProcess();
+            }
+        });
+
+        document.getElementById('intransitFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('intransitFileName').textContent = `✓ ${file.name}`;
+                document.getElementById('intransitUploadBox').classList.add('loaded');
+                checkReadyToProcess();
+            }
+        });
+
+        function checkReadyToProcess() {
+            const ordersFile = document.getElementById('ordersFile').files[0];
+            const inventoryFile = document.getElementById('inventoryFile').files[0];
+            const intransitFile = document.getElementById('intransitFile').files[0];
+            document.getElementById('processButton').disabled = !(ordersFile && inventoryFile && intransitFile);
+        }
+
+        async function loadInclusionOptions(file) {
+            try {
+                const arrayBuffer = await readFileAsArrayBuffer(file);
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(sheet);
+
+                const uniqueValues = {
+                    orderNumbers: new Set(),
+                    customerNumbers: new Set(),
+                    cobs: new Set(),
+                    orgCodes: new Set(),
+                    uoms: new Set(),
+                    items: new Set(),
+                    aramcoStatus: new Set()
+                };
+
+                data.forEach(row => {
+                    const orderNo = getColumnValue(row, ['ORDER_NO', 'Order Number', 'ORDER NUMBER']);
+                    if (orderNo) uniqueValues.orderNumbers.add(String(orderNo).trim());
+
+                    const customer = getColumnValue(row, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']);
+                    if (customer) uniqueValues.customerNumbers.add(String(customer).trim());
+
+                    const cob = getColumnValue(row, ['COB', 'Class of Business', 'Business', 'BUSINESS']);
+                    if (cob) uniqueValues.cobs.add(String(cob).trim());
+
+                    const orgCode = getColumnValue(row, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']);
+                    if (orgCode) uniqueValues.orgCodes.add(String(orgCode).trim());
+
+                    const uom = getColumnValue(row, ['UOM1', 'Unit of Measure', 'UNIT_OF_MEASURE']);
+                    if (uom) uniqueValues.uoms.add(String(uom).trim());
+
+                    const item = getColumnValue(row, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']);
+                    if (item) uniqueValues.items.add(String(item).trim());
+
+                    const cob1 = getColumnValue(row, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                    const uom1 = getColumnValue(row, ['UOM1', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
+                    const customerNumber1 = getColumnValue(row, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']) || '';
+
+                    if (uom1 === 'EA' || cob1 === 'Related Party' || cob1 === 'Retail Sales Unit' ||
+                        cob1 === 'ISD' || cob1 === 'Intercompany' || customerNumber1 === 'PC0001') {
+                        uniqueValues.aramcoStatus.add('Aramco');
+                    } else {
+                        uniqueValues.aramcoStatus.add('Not Aramco');
+                    }
+                });
+
+                displayInclusionOptions(uniqueValues);
+                document.getElementById('inclusionSection').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading inclusion options:', error);
+                alert('Error loading filter options. Please check the file format.');
+            }
+        }
+
+        function displayInclusionOptions(uniqueValues) {
+            const grid = document.getElementById('inclusionGrid');
+            grid.innerHTML = '';
+
+            const categories = [
+                { key: 'orderNumbers', title: 'Order Numbers', icon: '📋' },
+                { key: 'customerNumbers', title: 'Customer Numbers', icon: '👤' },
+                { key: 'cobs', title: 'COB', icon: '🏢' },
+                { key: 'orgCodes', title: 'Org Codes', icon: '🏭' },
+                { key: 'uoms', title: 'UOM', icon: '⚖️' },
+                { key: 'items', title: 'Item Numbers', icon: '🔢' },
+                { key: 'aramcoStatus', title: 'Aramco Status', icon: '🏭' }
+            ];
+
+            categories.forEach(category => {
+                const values = Array.from(uniqueValues[category.key]).sort();
+                if (values.length === 0) return;
+
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'inclusion-category';
+
+                const filterId = `filter-${category.key}`;
+
+                categoryDiv.innerHTML = `
+                    <div class="inclusion-category-title">
+                        <div class="inclusion-category-title-left">
+                            ${category.icon} ${category.title}
+                        </div>
+                        <span class="inclusion-count">${values.length} items</span>
+                    </div>
+                    <div class="excel-filter-container">
+                        <button class="excel-filter-button" data-category="${category.key}" onclick="toggleExcelFilter('${filterId}')">
+                            <span class="excel-filter-button-text" id="${filterId}-text">All selected (${values.length})</span>
+                            <span class="excel-filter-arrow">▼</span>
+                        </button>
+                        <div class="excel-filter-dropdown" id="${filterId}">
+                            <div class="excel-filter-search">
+                                <input type="text" placeholder="Search..." onkeyup="searchExcelFilter('${filterId}', this.value)">
+                            </div>
+                            <div class="excel-filter-select-all">
+                                <label>
+                                    <input type="checkbox" checked onchange="toggleAllExcelOptions('${filterId}', this.checked)">
+                                    <span>(Select All)</span>
+                                </label>
+                            </div>
+                            <div class="excel-filter-options" id="${filterId}-options">
+                                ${values.map(value => `
+                                    <div class="excel-filter-option" data-value="${value}">
+                                        <label>
+                                            <input type="checkbox" checked value="${value}" data-category="${category.key}" onchange="updateExcelFilterSelection('${filterId}')">
+                                            <span>${value}</span>
+                                        </label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(categoryDiv);
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.excel-filter-container')) {
+                    document.querySelectorAll('.excel-filter-dropdown').forEach(dropdown => {
+                        dropdown.classList.remove('show');
+                        const button = dropdown.previousElementSibling;
+                        if (button) button.classList.remove('active');
+                    });
+                }
+            });
+
+            selectAllInclusions();
+        }
+
+        function toggleExcelFilter(filterId) {
+            event.stopPropagation();
+            const dropdown = document.getElementById(filterId);
+            const button = dropdown.previousElementSibling;
+            const isOpen = dropdown.classList.contains('show');
+
+            // Close all other dropdowns
+            document.querySelectorAll('.excel-filter-dropdown').forEach(d => {
+                if (d.id !== filterId) {
+                    d.classList.remove('show');
+                    d.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            // Toggle this dropdown
+            if (isOpen) {
+                dropdown.classList.remove('show');
+                button.classList.remove('active');
+            } else {
+                dropdown.classList.add('show');
+                button.classList.add('active');
+            }
+        }
+
+        function searchExcelFilter(filterId, searchText) {
+            const options = document.querySelectorAll(`#${filterId}-options .excel-filter-option`);
+            const searchLower = searchText.toLowerCase();
+
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                option.style.display = text.includes(searchLower) ? '' : 'none';
+            });
+        }
+
+        function toggleAllExcelOptions(filterId, checked) {
+            const checkboxes = document.querySelectorAll(`#${filterId}-options input[type="checkbox"]`);
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+            });
+            updateExcelFilterSelection(filterId);
+        }
+
+        function updateExcelFilterSelection(filterId) {
+            const checkboxes = document.querySelectorAll(`#${filterId}-options input[type="checkbox"]`);
+            const selectAllCheckbox = document.querySelector(`#${filterId} .excel-filter-select-all input[type="checkbox"]`);
+            const buttonText = document.getElementById(`${filterId}-text`);
+
+            const totalCount = checkboxes.length;
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+            selectAllCheckbox.checked = checkedCount === totalCount;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+
+            if (checkedCount === 0) {
+                buttonText.textContent = 'None selected';
+            } else if (checkedCount === totalCount) {
+                buttonText.textContent = `All selected (${totalCount})`;
+            } else {
+                buttonText.textContent = `${checkedCount} of ${totalCount} selected`;
+            }
+
+            updateInclusionSummary();
+        }
+
+        function updateInclusionSummary() {
+            inclusionCriteria = {
+                orderNumbers: new Set(),
+                customerNumbers: new Set(),
+                cobs: new Set(),
+                orgCodes: new Set(),
+                uoms: new Set(),
+                items: new Set(),
+                aramcoStatus: new Set()
+            };
+
+            document.querySelectorAll('.excel-filter-options input[type="checkbox"]:checked').forEach(checkbox => {
+                const category = checkbox.dataset.category;
+                const value = checkbox.value;
+                inclusionCriteria[category].add(value);
+            });
+
+            const totalInclusions = Object.values(inclusionCriteria).reduce((sum, set) => sum + set.size, 0);
+            const summary = document.getElementById('inclusionSummary');
+            const summaryText = document.getElementById('inclusionSummaryText');
+
+            if (totalInclusions > 0) {
+                summary.style.display = 'block';
+                summaryText.textContent = `✓ ${totalInclusions} filter criteria selected. Only orders matching these criteria will be processed.`;
+            } else {
+                summary.style.display = 'block';
+                summaryText.textContent = `⚠️ No filters selected. Please select at least one option from each category or click "Select All".`;
+            }
+        }
+
+        function selectAllInclusions() {
+            document.querySelectorAll('.excel-filter-select-all input[type="checkbox"]').forEach(selectAll => {
+                selectAll.checked = true;
+                const filterId = selectAll.closest('.excel-filter-dropdown').id;
+                toggleAllExcelOptions(filterId, true);
+            });
+        }
+
+        function clearAllInclusions() {
+            document.querySelectorAll('.excel-filter-select-all input[type="checkbox"]').forEach(selectAll => {
+                selectAll.checked = false;
+                const filterId = selectAll.closest('.excel-filter-dropdown').id;
+                toggleAllExcelOptions(filterId, false);
+            });
+        }
+
+        document.getElementById('processButton').addEventListener('click', processFiles);
+
+        function normalizeHeader(v) {
+            return String(v || '')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .replace(/[_\-]/g, ' ')
+                .toUpperCase();
+        }
+
+        function detectHeaderRow(rows, requiredGroups) {
+            for (let i = 0; i < rows.length; i++) {
+                const set = new Set(rows[i].map(normalizeHeader));
+                let ok = true;
+                for (const group of requiredGroups) {
+                    const any = group.some(name => set.has(normalizeHeader(name)));
+                    if (!any) { ok = false; break; }
+                }
+                if (ok) return { rowIndex: i, headers: rows[i] };
+            }
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].some(v => v !== undefined && v !== null && String(v).trim() !== '')) {
+                    return { rowIndex: i, headers: rows[i] };
+                }
+            }
+            return { rowIndex: 0, headers: rows[0] || [] };
+        }
+
+        function rowsToObjects(rows, headerRowIndex) {
+            const headers = rows[headerRowIndex];
+            const objs = [];
+            for (let r = headerRowIndex + 1; r < rows.length; r++) {
+                const row = rows[r] || [];
+                const isBlank = row.every(v => v === undefined || v === null || String(v).trim() === '');
+                if (isBlank) continue;
+                const o = {};
+                for (let c = 0; c < headers.length; c++) {
+                    const key = headers[c];
+                    if (key === undefined || key === null || String(key).trim() === '') continue;
+                    o[String(key).trim()] = row[c];
+                }
+                objs.push(o);
+            }
+            return objs;
+        }
+
+        async function processFiles() {
+            const ordersFile = document.getElementById('ordersFile').files[0];
+            const inventoryFile = document.getElementById('inventoryFile').files[0];
+            const intransitFile = document.getElementById('intransitFile').files[0];
+
+            try {
+                console.log('Starting file processing...');
+
+                // ============================================
+                // CRITICAL: RESET ALL GLOBAL VARIABLES
+                // ============================================
+                ordersData = null;
+                inventoryData = null;
+                intransitData = null;
+                cobData = null;
+                holdFreeOrdersProcessed = [];
+                inventorySummary = {};  // MUST CLEAR THIS
+                runningInventory = {};  // MUST CLEAR THIS
+                initialInventory = {};  // MUST CLEAR THIS
+                actualCOBs = [];        // MUST CLEAR THIS
+
+                // Clear any existing charts
+                Object.values(charts).forEach(chart => {
+                    try {
+                        if (chart) chart.destroy();
+                    } catch (e) {
+                        console.log('Chart cleanup:', e);
+                    }
+                });
+                charts = {};
+                // ============================================
+
+                console.log('Processing orders file:', ordersFile.name);
+                const ordersArrayBuffer = await readFileAsArrayBuffer(ordersFile);
+                const ordersWorkbook = XLSX.read(ordersArrayBuffer, { type: 'array' });
+                const ordersSheet = ordersWorkbook.Sheets[ordersWorkbook.SheetNames[0]];
+                ordersData = XLSX.utils.sheet_to_json(ordersSheet);
+                console.log(`Orders data loaded: ${ordersData.length} rows`);
+
+                console.log('Processing inventory file:', inventoryFile.name);
+                const inventoryArrayBuffer = await readFileAsArrayBuffer(inventoryFile);
+                const inventoryWorkbook = XLSX.read(inventoryArrayBuffer, { type: 'array' });
+                const inventorySheet = inventoryWorkbook.Sheets[inventoryWorkbook.SheetNames[0]];
+                const invRows = XLSX.utils.sheet_to_json(inventorySheet, { header: 1, blankrows: false });
+
+                const onHandRequired = [
+                    ['Sub Inventory', 'SubInventory', 'Sub Inventory ', 'SUB INVENTORY'],
+                    ['Item Number', 'ItemNumber', 'Item_Number', 'ITEM NUMBER', 'Item'],
+                    ['On Hand Qty', 'OnHandQty', 'On_Hand_Qty', 'ON HAND QTY', 'On Hand Quantity']
+                ];
+
+                const invHdr = detectHeaderRow(invRows, onHandRequired);
+                const inventoryRows = rowsToObjects(invRows, invHdr.rowIndex);
+                inventoryData = inventoryRows;
+                console.log(`Inventory data loaded: ${inventoryData.length} rows`);
+
+                console.log('Processing in-transit file:', intransitFile.name);
+                const intransitArrayBuffer = await readFileAsArrayBuffer(intransitFile);
+                const intransitWorkbook = XLSX.read(intransitArrayBuffer, { type: 'array' });
+                const intransitSheet = intransitWorkbook.Sheets[intransitWorkbook.SheetNames[0]];
+                const intransitRaw = XLSX.utils.sheet_to_json(intransitSheet, { header: 1 });
+                const headers = intransitRaw[1];
+                intransitData = [];
+                for (let i = 2; i < intransitRaw.length; i++) {
+                    const row = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        row[headers[j]] = intransitRaw[i][j];
+                    }
+                    intransitData.push(row);
+                }
+                console.log(`In-transit data loaded: ${intransitData.length} rows`);
+
+                processOrdersData();
+                processMergedInventoryData();
+                processCOBData();
+                processHoldFreeOrdersWithFIFO();
+                generateAnalysisTables();
+                displayOrderDetails();
+
+                document.getElementById('tabContainer').style.display = 'block';
+
+                // ADD THIS LINE:
+                initializeEtaSectionAfterProcessing();
+
+                console.log('Processing complete!');
+
+            } catch (error) {
+                console.error('Error processing files:', error);
+                alert(`Error processing files: ${error.message}\n\nPlease check the console for more details.`);
+            }
+        }
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function getColumnValue(row, columnNames) {
+            for (let colName of columnNames) {
+                if (row[colName] !== undefined && row[colName] !== null && row[colName] !== '') {
+                    return row[colName];
+                }
+            }
+            return null;
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr || dateStr === null || dateStr === undefined || String(dateStr).trim() === '') {
+                return null;
+            }
+
+            const dateString = String(dateStr).trim();
+
+            if (dateString === '' || dateString === 'null' || dateString === 'undefined' || dateString === '0' || dateString === 'NaN') {
+                return null;
+            }
+
+            const datetimeParts = dateString.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
+            if (datetimeParts) {
+                const day = parseInt(datetimeParts[1]);
+                const month = parseInt(datetimeParts[2]) - 1;
+                const year = parseInt(datetimeParts[3]);
+                const hour = parseInt(datetimeParts[4]);
+                const minute = parseInt(datetimeParts[5]);
+                const second = parseInt(datetimeParts[6]);
+
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year) && year > 1970 && month >= 0 && month <= 11) {
+                    return new Date(year, month, day, hour, minute, second);
+                }
+            }
+
+            const numericParts = dateString.split('-');
+            if (numericParts.length === 3 && !dateString.includes(':')) {
+                const day = parseInt(numericParts[0]);
+                const month = parseInt(numericParts[1]) - 1;
+                const year = parseInt(numericParts[2]);
+
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year) && year > 1970 && month >= 0 && month <= 11) {
+                    return new Date(year, month, day);
+                }
+            }
+
+            const months = {
+                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+            };
+
+            const textParts = dateString.split('-');
+            if (textParts.length === 3) {
+                const day = parseInt(textParts[0]);
+                const month = months[textParts[1]];
+                const year = parseInt(textParts[2]);
+                if (!isNaN(day) && month !== undefined && !isNaN(year) && year > 1970) {
+                    return new Date(year, month, day);
+                }
+            }
+
+            const numericDate = parseFloat(dateString);
+            if (!isNaN(numericDate) && numericDate > 25569) {
+                const date = new Date((numericDate - 25569) * 86400 * 1000);
+                return date;
+            }
+
+            const parsedDate = new Date(dateString);
+            if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 1970) {
+                return parsedDate;
+            }
+
+            console.warn(`Could not parse date: "${dateStr}"`);
+            return null;
+        }
+
+        function formatDate(date) {
+            if (!date || isNaN(date.getTime())) return 'No Date';
+            if (date.getFullYear() < 1970) return 'Invalid Date';
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${date.getDate()}-${months[date.getMonth()]}-${date.getFullYear()}`;
+        }
+
+        function processOrdersData() {
+            let releasedCount = 0;
+            let notReleasedCount = 0;
+            let releasedMT = 0;
+            let notReleasedMT = 0;
+
+            ordersData.forEach(row => {
+                if (shouldExcludeOrder(row)) {
+                    return;
+                }
+
+                const releasedFlag = getColumnValue(row, ['RELEASED_FLAG', 'Released Flag', 'RELEASE_FLAG']);
+                const qtyMT = parseFloat(getColumnValue(row, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+
+                if (releasedFlag === 'Y' || releasedFlag === 'y' || releasedFlag === true) {
+                    releasedCount++;
+                    releasedMT += qtyMT;
+                } else {
+                    notReleasedCount++;
+                    notReleasedMT += qtyMT;
+                }
+            });
+
+            const totalCount = releasedCount + notReleasedCount;
+            const totalMT = releasedMT + notReleasedMT;
+
+            document.getElementById('releasedCount').textContent = releasedCount.toLocaleString();
+            document.getElementById('releasedMT').textContent = `${releasedMT.toFixed(2)} MT`;
+            document.getElementById('notReleasedCount').textContent = notReleasedCount.toLocaleString();
+            document.getElementById('notReleasedMT').textContent = `${notReleasedMT.toFixed(2)} MT`;
+            document.getElementById('totalCount').textContent = totalCount.toLocaleString();
+            document.getElementById('totalMT').textContent = `${totalMT.toFixed(2)} MT`;
+        }
+
+        function processCOBData() {
+            // First, discover all unique COBs in the data
+            const discoveredCOBs = new Set();
+
+            ordersData.forEach(row => {
+                if (shouldExcludeOrder(row)) {
+                    return;
+                }
+
+                let cob = getColumnValue(row, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+
+                if (cob) {
+                    discoveredCOBs.add(cob);
+                }
+            });
+
+            // Build actualCOBs: preferred ones first (if they exist), then others alphabetically
+            actualCOBs = [];
+
+            // Add preferred COBs in order if they exist in the data
+            preferredCOBs.forEach(cob => {
+                if (discoveredCOBs.has(cob)) {
+                    actualCOBs.push(cob);
+                    discoveredCOBs.delete(cob); // Remove so we don't add it again
+                }
+            });
+
+            // Add any remaining COBs alphabetically
+            const remainingCOBs = Array.from(discoveredCOBs).sort();
+            actualCOBs.push(...remainingCOBs);
+
+            console.log('COBs found in data:', actualCOBs);
+
+            // Initialize cobData with all discovered COBs
+            cobData = {
+                creditHold: {},
+                holdFree: {},
+                total: {}
+            };
+
+            actualCOBs.forEach(cob => {
+                cobData.creditHold[cob] = 0;
+                cobData.holdFree[cob] = 0;
+                cobData.total[cob] = 0;
+            });
+
+            ordersData.forEach(row => {
+                if (shouldExcludeOrder(row)) {
+                    return;
+                }
+
+                let cob = getColumnValue(row, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+
+                if (actualCOBs.includes(cob)) {
+                    const qtyMT = parseFloat(getColumnValue(row, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                    const releasedFlag = getColumnValue(row, ['RELEASED_FLAG', 'Released Flag', 'RELEASE_FLAG']);
+
+                    const isReleased = releasedFlag === 'Y' || releasedFlag === 'y' || releasedFlag === true;
+
+                    if (!isReleased) {
+                        cobData.creditHold[cob] = cobData.creditHold[cob] + qtyMT;
+                    } else {
+                        cobData.holdFree[cob] = cobData.holdFree[cob] + qtyMT;
+                    }
+
+                    cobData.total[cob] = cobData.total[cob] + qtyMT;
+                }
+            });
+
+            console.log('COB Data processed:', cobData);
+
+            document.getElementById('chartsContainer').style.display = 'block';
+            document.getElementById('noDataMessage').style.display = 'none';
+        }
+        function shouldExcludeOrder(order) {
+            const orderNo = getColumnValue(order, ['ORDER_NO', 'Order Number', 'ORDER NUMBER']);
+            if (inclusionCriteria.orderNumbers.size > 0 && orderNo) {
+                if (!inclusionCriteria.orderNumbers.has(String(orderNo).trim())) {
+                    return true;
+                }
+            }
+
+            const customer = getColumnValue(order, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']);
+            if (inclusionCriteria.customerNumbers.size > 0 && customer) {
+                if (!inclusionCriteria.customerNumbers.has(String(customer).trim())) {
+                    return true;
+                }
+            }
+
+            const cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']);
+            if (inclusionCriteria.cobs.size > 0 && cob) {
+                if (!inclusionCriteria.cobs.has(String(cob).trim())) {
+                    return true;
+                }
+            }
+
+            const orgCode = getColumnValue(order, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']);
+            if (inclusionCriteria.orgCodes.size > 0 && orgCode) {
+                if (!inclusionCriteria.orgCodes.has(String(orgCode).trim())) {
+                    return true;
+                }
+            }
+
+            const uom = getColumnValue(order, ['UOM1', 'Unit of Measure', 'UNIT_OF_MEASURE']);
+            if (inclusionCriteria.uoms.size > 0 && uom) {
+                if (!inclusionCriteria.uoms.has(String(uom).trim())) {
+                    return true;
+                }
+            }
+
+            const item = getColumnValue(order, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']);
+            if (inclusionCriteria.items.size > 0 && item) {
+                if (!inclusionCriteria.items.has(String(item).trim())) {
+                    return true;
+                }
+            }
+
+            const cob1 = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+            const uom1 = getColumnValue(order, ['UOM1', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
+            const customerNumber1 = getColumnValue(order, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']) || '';
+
+            let aramcoStatus = 'Not Aramco';
+            if (uom1 === 'EA' || cob1 === 'Related Party' || cob1 === 'Retail Sales Unit' ||
+                cob1 === 'ISD' || cob1 === 'Intercompany' || customerNumber1 === 'PC0001') {
+                aramcoStatus = 'Aramco';
+            }
+
+            if (inclusionCriteria.aramcoStatus.size > 0) {
+                if (!inclusionCriteria.aramcoStatus.has(aramcoStatus)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function processHoldFreeOrdersWithFIFO() {
+            runningInventory = JSON.parse(JSON.stringify(inventorySummary));
+            initialInventory = JSON.parse(JSON.stringify(inventorySummary));
+
+            const holdFreeOrders = [];
+
+            ordersData.forEach(row => {
+                if (shouldExcludeOrder(row)) {
+                    return;
+                }
+
+                const releasedFlag = getColumnValue(row, ['RELEASED_FLAG', 'Released Flag', 'RELEASE_FLAG']);
+                const isReleased = releasedFlag === 'Y' || releasedFlag === 'y' || releasedFlag === true;
+
+                if (isReleased) {
+                    // CREATE A CLEAN COPY - Remove any existing processed fields
+                    const cleanOrder = { ...row };
+                    delete cleanOrder['Stock Status'];
+                    delete cleanOrder['Comments'];
+                    delete cleanOrder['Action For'];
+                    delete cleanOrder['Aramco or Not'];
+                    delete cleanOrder['Jeddah_Stock'];
+                    delete cleanOrder['Riyadh_Stock'];
+                    delete cleanOrder['Dammam_Stock'];
+                    delete cleanOrder['Abha_Stock'];
+
+                    holdFreeOrders.push(cleanOrder);
+                }
+            });
+
+            holdFreeOrders.sort((a, b) => {
+                const releaseDateStrA = getColumnValue(a, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']);
+                const releaseDateStrB = getColumnValue(b, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']);
+
+                const dateA = parseDate(releaseDateStrA);
+                const dateB = parseDate(releaseDateStrB);
+
+                if (!dateA && !dateB) return 0;
+                if (!dateA) return 1;
+                if (!dateB) return -1;
+
+                return dateA.getTime() - dateB.getTime();
+            });
+
+            console.log('First 10 orders after FIFO sort:');
+            holdFreeOrders.slice(0, 10).forEach((order, idx) => {
+                const rawDate = getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']);
+                const parsedDate = parseDate(rawDate);
+                const orderNo = getColumnValue(order, ['ORDER_NO', 'Order Number', 'ORDER NUMBER']);
+                console.log(`${idx + 1}. Order: ${orderNo}, Raw Date: "${rawDate}", Parsed: ${parsedDate ? formatDate(parsedDate) : 'NULL'}`);
+            });
+
+            // CLEAR the processed orders array completely before rebuilding
+            holdFreeOrdersProcessed = [];
+
+            holdFreeOrders.forEach(order => {
+                const processedOrder = { ...order };
+
+                // EXPLICITLY INITIALIZE these fields to empty values
+                processedOrder['Stock Status'] = '';
+                processedOrder['Comments'] = '';
+                processedOrder['Action For'] = '';
+                processedOrder['Aramco or Not'] = '';
+                processedOrder['Jeddah_Stock'] = 0;
+                processedOrder['Riyadh_Stock'] = 0;
+                processedOrder['Dammam_Stock'] = 0;
+                processedOrder['Abha_Stock'] = 0;
+
+                processedOrder['Stock Status'] = '';
+                processedOrder['Comments'] = '';
+                processedOrder['Action For'] = '';
+
+                const cob1 = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                const uom1 = getColumnValue(order, ['UOM1', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
+                const customerNumber1 = getColumnValue(order, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']) || '';
+
+                if (uom1 === 'EA' ||
+                    cob1 === 'Related Party' ||
+                    cob1 === 'Retail Sales Unit' ||
+                    cob1 === 'ISD' ||
+                    cob1 === 'Intercompany' ||
+                    customerNumber1 === 'PC0001') {
+                    processedOrder['Aramco or Not'] = 'Aramco';
+                } else {
+                    processedOrder['Aramco or Not'] = 'Not Aramco';
+                }
+
+                // NEW FEATURE: Check for decimal values in ORIGINAL_ORDER_QTY
+                const originalOrderQty = parseFloat(getColumnValue(order, ['ORIGINAL_ORDER_QTY', 'Original Order Qty', 'ORIGINAL ORDER QTY']));
+                const hasDecimalValue = !isNaN(originalOrderQty) && (originalOrderQty % 1 !== 0);
+
+                if (hasDecimalValue) {
+                    // If ORIGINAL_ORDER_QTY has decimal places, mark for cancellation
+                    processedOrder['Stock Status'] = 'Order Need to Cancel';
+                    processedOrder['Comments'] = 'Order Need to Cancel';
+
+                    // Set stock values to current inventory levels
+                    const productNo = getColumnValue(order, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']);
+                    const itemNumber = String(productNo);
+
+                    processedOrder['Jeddah_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Jeddah');
+                    processedOrder['Riyadh_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Riyadh');
+                    processedOrder['Dammam_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Dammam');
+                    processedOrder['Abha_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Abha');
+
+                    holdFreeOrdersProcessed.push(processedOrder);
+                    return; // Skip further processing for this order
+                }
+
+                const shippingStatus = getColumnValue(order, ['SHIPPING_STATUS', 'Shipping Status', 'SHIPPING STATUS']);
+                const uom = getColumnValue(order, ['UOM1', 'Unit of Measure', 'UNIT_OF_MEASURE']);
+                const customerNumber = getColumnValue(order, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']);
+                const productNo = getColumnValue(order, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']);
+                const shippingInstruction = getColumnValue(order, ['SHIPPING_INSTRUCTIONS', 'Shipping Instruction', 'SHIPPING INSTRUCTION']) || '';
+                const orgCode = getColumnValue(order, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']);
+                const pendingQty = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT', 'Pending Quantity'])) || 0;
+
+                if (shippingStatus === 'Staged') {
+                    processedOrder['Stock Status'] = 'Picked';
+                } else if (uom === 'LIT') {
+                    processedOrder['Stock Status'] = 'Bulk Order';
+                }
+
+                if (['06477', '00213'].includes(String(customerNumber))) {
+                    processedOrder['Comments'] = 'Hold by Sales';
+                } else if (String(productNo) === '53610095') {
+                    processedOrder['Comments'] = 'Transformer Oil';
+                } else if (/customer truck|self collection|self pick/i.test(shippingInstruction)) {
+                    processedOrder['Comments'] = 'Self Collection';
+                } else if (shippingStatus === 'Staged') {
+                    processedOrder['Comments'] = 'Logistics to Ship';
+                } else if (uom === 'LIT') {
+                    processedOrder['Comments'] = 'Bulk Team to Confirm';
+                }
+
+                const itemNumber = String(productNo);
+                let stockAvailable = false;
+                let location = '';
+
+                let locationPriority = [];
+
+                if (orgCode === 'JE0' || orgCode === 'JED' || orgCode === 'TP0') {
+                    locationPriority = ['Jeddah', 'Riyadh', 'Dammam', 'Abha'];
+                } else if (orgCode === 'RY0' || orgCode === 'RYD' || orgCode === 'QFG') {
+                    locationPriority = ['Riyadh', 'Jeddah', 'Dammam', 'Abha'];
+                } else if (orgCode === 'JU0' || orgCode === 'JUB') {
+                    locationPriority = ['Dammam', 'Jeddah', 'Riyadh', 'Abha'];
+                } else if (orgCode === 'AFG' || orgCode === 'DMM') {
+                    locationPriority = ['Abha', 'Jeddah', 'Riyadh', 'Dammam'];
+                } else {
+                    locationPriority = ['Jeddah', 'Riyadh', 'Dammam', 'Abha'];
+                }
+
+                // Try to allocate from locations in priority order
+                let allocationResult = null;
+                for (const checkLocation of locationPriority) {
+                    const availableQty = getAvailableQuantityForLocation(itemNumber, checkLocation);
+                    if (availableQty >= pendingQty) {
+                        stockAvailable = true;
+                        location = checkLocation;
+                        allocationResult = deductFromInventory(itemNumber, checkLocation, pendingQty);
+                        break;
+                    }
+                }
+
+                // FOURTH PASS - Update status and comments based on stock availability
+                if (stockAvailable) {
+                    if (!processedOrder['Stock Status']) {
+                        processedOrder['Stock Status'] = 'Stock Available';
+                    }
+                    if (!processedOrder['Comments']) {
+                        // Check if allocation used in-transit stock
+                        if (allocationResult && allocationResult.usedInTransit) {
+                            processedOrder['Comments'] = 'in-transit';
+                        } else {
+                            processedOrder['Comments'] = 'Logistics to Ship';
+                        }
+                    }
+                    processedOrder['Action For'] = location;
+                } else {
+                    if (!processedOrder['Stock Status']) {
+                        processedOrder['Stock Status'] = 'In-sufficient Stock';
+                    }
+                    if (!processedOrder['Comments']) {
+                        // Check if this item is in the special ETA list
+                        const isEtaItem = etaItems.has(String(itemNumber).trim());
+                        processedOrder['Comments'] = isEtaItem ? 'ETA: TBC' : 'ERD: TBC';
+                    }
+                }
+
+                processedOrder['Jeddah_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Jeddah');
+                processedOrder['Riyadh_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Riyadh');
+                processedOrder['Dammam_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Dammam');
+                processedOrder['Abha_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Abha');
+
+                // CRITICAL: Overwrite comments for In-sufficient Stock EXCEPT "Hold by Sales"
+                if (processedOrder['Stock Status'] === 'In-sufficient Stock') {
+                    // Keep "Hold by Sales", overwrite everything else
+                    if (processedOrder['Comments'] !== 'Transformer Oil') {
+                        const isEtaItem = etaItems.has(String(itemNumber).trim());
+                        processedOrder['Comments'] = isEtaItem ? 'ETA: TBC' : 'ERD: TBC';
+                    }
+                }
+
+                holdFreeOrdersProcessed.push(processedOrder);
+            });
+
+            console.log('Hold Free Orders Processed with FIFO:', holdFreeOrdersProcessed.length);
+        }
+        function getAvailableQuantityForLocation(item, location) {
+            const itemInv = runningInventory[item] || {};
+            const subInvs = new Set();
+            const transitKeys = new Set();
+
+            for (const [org, cfg] of Object.entries(orgMapping)) {
+                if (cfg.location === location) {
+                    cfg.subInvs.forEach(s => subInvs.add(s));
+                    transitKeys.add(org);
+                }
+            }
+
+            let total = 0;
+            subInvs.forEach(s => { total += itemInv[s] || 0; });
+            transitKeys.forEach(k => { total += itemInv[k] || 0; });
+            return total;
+        }
+
+        function deductFromInventory(itemNumber, location, quantity) {
+            if (!runningInventory[itemNumber]) return { usedInTransit: false, fullyAllocated: false };
+
+            let remainingToDeduct = quantity;
+            const itemInventory = runningInventory[itemNumber];
+            let usedInTransit = false;
+
+            for (const [orgCode, config] of Object.entries(orgMapping)) {
+                if (config.location === location && remainingToDeduct > 0) {
+                    // First deduct from sub-inventories (on-hand stock)
+                    for (const subInv of config.subInvs) {
+                        if (remainingToDeduct > 0 && itemInventory[subInv] > 0) {
+                            const deductAmount = Math.min(itemInventory[subInv], remainingToDeduct);
+                            itemInventory[subInv] -= deductAmount;
+                            remainingToDeduct -= deductAmount;
+                        }
+                    }
+
+                    // Then deduct from in-transit (org code) if on-hand wasn't enough
+                    if (remainingToDeduct > 0 && itemInventory[orgCode] > 0) {
+                        const deductAmount = Math.min(itemInventory[orgCode], remainingToDeduct);
+                        itemInventory[orgCode] -= deductAmount;
+                        remainingToDeduct -= deductAmount;
+                        usedInTransit = true;  // Mark that in-transit stock was used
+                    }
+                }
+            }
+
+            return {
+                usedInTransit: usedInTransit,
+                fullyAllocated: remainingToDeduct === 0
+            };
+        }
+        function displayOrderDetails() {
+            displayInventoryStatus('initialInventoryStatus', initialInventory);
+            initializeFilters();
+            displayFilteredOrders(holdFreeOrdersProcessed);
+            displayInventoryStatus('finalInventoryStatus', runningInventory);
+        }
+
+        function displayInventoryStatus(elementId, inventory) {
+            const locations = ['Jeddah', 'Riyadh', 'Dammam', 'Abha'];
+            let html = '';
+
+            locations.forEach(location => {
+                let totalQty = 0;
+                let itemCount = 0;
+
+                for (const [itemNumber, itemInventory] of Object.entries(inventory)) {
+                    const qty = getInventoryForLocation(itemInventory, location);
+                    if (qty > 0) {
+                        totalQty += qty;
+                        itemCount++;
+                    }
+                }
+
+                html += `
+                <div class="inventory-location-card">
+                    <div class="location-name">${location}</div>
+                    <div class="inventory-item">
+                        <span class="inventory-label">Total Items:</span>
+                        <span class="inventory-value">${itemCount}</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="inventory-label">Total Quantity:</span>
+                        <span class="inventory-value">${totalQty.toFixed(0)} MT</span>
+                    </div>
+                </div>
+            `;
+            });
+
+            document.getElementById(elementId).innerHTML = html;
+        }
+
+        function getInventoryForLocation(itemInventory, location) {
+            let total = 0;
+
+            for (const [orgCode, config] of Object.entries(orgMapping)) {
+                if (config.location === location) {
+                    config.subInvs.forEach(subInv => {
+                        total += itemInventory[subInv] || 0;
+                    });
+                    total += itemInventory[orgCode] || 0;
+                }
+            }
+
+            return total;
+        }
+
+        function exportOrderDetails() {
+            let csvContent = "Order #,Release Date,Order Number,Customer #,COB,Org Code,Shipping Status,Shipping Instruction,UOM,Item,Original Order Qty,Qty MT,Aramco or Not,Stock Status,Comments,Action For,Jeddah Stock,Riyadh Stock,Dammam Stock,Abha Stock\n";
+            holdFreeOrdersProcessed.forEach((order, index) => {
+                const releaseDate = parseDate(getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']));
+                const orderNumber = getColumnValue(order, ['ORDER_NO', 'ORDER_NUMBER', 'Order Number', 'ORDER NUMBER']) || '';
+                const customer = getColumnValue(order, ['CUSTOMER_NAME', 'Customer Name', 'CUSTOMER']) || '';
+                const cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                const orgCode = getColumnValue(order, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']) || '';
+                const itemNumber = getColumnValue(order, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']) || '';
+                const originalOrderQty = parseFloat(getColumnValue(order, ['ORIGINAL_ORDER_QTY', 'Original Order Qty', 'ORIGINAL ORDER QTY'])) || 0;
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                const shippingStatus = getColumnValue(order, ['SHIPPING_STATUS', 'Shipping Status', 'SHIPPING STATUS']) || '';
+                const shippingInstruction = getColumnValue(order, ['SHIPPING_INSTRUCTIONS', 'Shipping Instruction', 'SHIPPING INSTRUCTION']) || '';
+                const uom = getColumnValue(order, ['UOM1', 'UOM', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
+
+                const formattedDate = releaseDate ? formatDate(releaseDate) : 'No Date';
+
+                const escapeCsvField = (field) => {
+                    const str = String(field).replace(/"/g, '""');
+                    return `"${str}"`;
+                };
+
+                csvContent += `${index + 1},${escapeCsvField(formattedDate)},${escapeCsvField(orderNumber)},${escapeCsvField(customer)},${escapeCsvField(cob)},${escapeCsvField(orgCode)},${escapeCsvField(shippingStatus)},${escapeCsvField(shippingInstruction)},${escapeCsvField(uom)},${escapeCsvField(itemNumber)},${originalOrderQty.toFixed(2)},${qtyMT.toFixed(2)},${escapeCsvField(order['Aramco or Not'])},${escapeCsvField(order['Stock Status'])},${escapeCsvField(order['Comments'])},${escapeCsvField(order['Action For'])},${order['Jeddah_Stock'].toFixed(0)},${order['Riyadh_Stock'].toFixed(0)},${order['Dammam_Stock'].toFixed(0)},${order['Abha_Stock'].toFixed(0)}\n`;
+            });
+
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'order_details_fifo_allocation.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        function generateAnalysisTables() {
+            generateCOBMainTable();
+            generateStockAvailabilityTable();
+            generateStockNotAvailableTable();
+            generateStockAvailableStatusTable();
+            generateActionForPivotTable();
+        }
+
+        function generateCOBMainTable() {
+            let tableHTML = '';
+            let totalCreditHold = 0;
+            let totalHoldFree = 0;
+            let grandTotal = 0;
+
+            actualCOBs.forEach(cob => {
+                const creditHold = cobData.creditHold[cob] || 0;
+                const holdFree = cobData.holdFree[cob] || 0;
+                const total = creditHold + holdFree;
+
+                totalCreditHold += creditHold;
+                totalHoldFree += holdFree;
+                grandTotal += total;
+
+                const rowClass = cob.startsWith('Petromin') ? 'petromin-row' : '';
+
+                tableHTML += `
+                <tr class="${rowClass}">
+                    <td>${cob}</td>
+                    <td style="color: #e53e3e; font-weight: 600;">${creditHold.toFixed(0)}</td>
+                    <td style="color: #f6a800; font-weight: 600;">${holdFree.toFixed(0)}</td>
+                    <td><strong>${total.toFixed(0)}</strong></td>
+                </tr>
+            `;
+            });
+
+            tableHTML += `
+            <tr class="total-row">
+                <td>Total MT</td>
+                <td style="color: #e53e3e; font-weight: 600;">${totalCreditHold.toFixed(0)}</td>
+                <td style="color: #f6a800; font-weight: 600;">${totalHoldFree.toFixed(0)}</td>
+                <td>${grandTotal.toFixed(0)}</td>
+            </tr>
+        `;
+
+            document.getElementById('cobMainTableBody').innerHTML = tableHTML;
+        }
+
+        function generateStockAvailabilityTable() {
+            const stockData = {};
+
+            actualCOBs.forEach(cob => {
+                stockData[cob] = {
+                    available: 0,
+                    notAvailable: 0
+                };
+            });
+
+            holdFreeOrdersProcessed.forEach(order => {
+                let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+
+                if (actualCOBs.includes(cob)) {
+                    const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                    const stockStatus = order['Stock Status'];
+
+                    // AVAILABLE: Stock Available OR Picked
+                    if (stockStatus === 'Stock Available' || stockStatus === 'Picked') {
+                        stockData[cob].available += qtyMT;
+                    }
+                    // NOT AVAILABLE
+                    else if (stockStatus === 'In-sufficient Stock' ||
+                        stockStatus === 'Order Need to Cancel' ||
+                        stockStatus === 'Bulk Order') {
+                        stockData[cob].notAvailable += qtyMT;
+                    }
+                }
+            });
+
+            let tableHTML = '';
+            let totalAvailable = 0;
+            let totalNotAvailable = 0;
+
+            actualCOBs.forEach(cob => {
+                const available = stockData[cob].available;
+                const notAvailable = stockData[cob].notAvailable;
+                const total = available + notAvailable;
+
+                totalAvailable += available;
+                totalNotAvailable += notAvailable;
+
+                const rowClass = cob.startsWith('Petromin') ? 'petromin-row' : '';
+
+                tableHTML += `
+            <tr class="${rowClass}">
+                <td>${cob}</td>
+                <td style="color: #f6a800; font-weight: 600;">${available.toFixed(0)}</td>
+                <td style="color: #e53e3e; font-weight: 600;">${notAvailable.toFixed(0)}</td>
+                <td><strong>${total.toFixed(0)}</strong></td>
+            </tr>
+        `;
+            });
+
+            tableHTML += `
+        <tr class="total-row">
+            <td>Total MT</td>
+            <td style="color: #f6a800; font-weight: 600;">${totalAvailable.toFixed(0)}</td>
+            <td style="color: #e53e3e; font-weight: 600;">${totalNotAvailable.toFixed(0)}</td>
+            <td>${(totalAvailable + totalNotAvailable).toFixed(0)}</td>
+        </tr>
+    `;
+
+            document.getElementById('stockAvailabilityBody').innerHTML = tableHTML;
+        }
+        function generateStockNotAvailableTable() {
+            const statusData = {};
+
+            actualCOBs.forEach(cob => {
+                statusData[cob] = {
+                    itoIts: 0,           // Column 1: ITO/ITS Grades
+                    holdBySales: 0,      // Column 2: Hold by Sales
+                    transformerOil: 0,   // Column 3: Transformer Oil (NEW)
+                    bulkOrder: 0,        // Column 4: BULK Order
+                    toCancel: 0,         // Column 5: Order to Be Cancelled
+                    netShortfall: 0      // Column 6: Net Shortfall Requiring Action
+                };
+            });
+
+            holdFreeOrdersProcessed.forEach(order => {
+                let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+
+                if (actualCOBs.includes(cob)) {
+                    const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                    const stockStatus = order['Stock Status'];
+                    const comments = order['Comments'];
+
+                    // Column 1: ITO/ITS Grades
+                    if (comments === 'ETA: TBC') {
+                        statusData[cob].itoIts += qtyMT;
+                    }
+
+                    // Column 2: Hold by Sales
+                    if ((stockStatus === 'In-sufficient Stock' ||
+                        stockStatus === 'Bulk Order') &&
+                        comments === 'Hold by Sales') {
+                        statusData[cob].holdBySales += qtyMT;
+                    }
+
+                    // Column 3: Transformer Oil (NEW)
+                    if (comments === 'Transformer Oil') {
+                        statusData[cob].transformerOil += qtyMT;
+                    }
+
+                    // Column 4: BULK Order
+                    if (stockStatus === 'Bulk Order' && comments === 'Bulk Team to Confirm') {
+                        statusData[cob].bulkOrder += qtyMT;
+                    }
+
+                    // Column 5: Order to Be Cancelled
+                    if (comments === 'Order Need to Cancel') {
+                        statusData[cob].toCancel += qtyMT;
+                    }
+
+                    // Column 6: Net Shortfall Requiring Action
+                    if (comments === 'ERD: TBC' || comments === 'ERD:TBC') {
+                        statusData[cob].netShortfall += qtyMT;
+                    }
+                }
+            });
+
+            let tableHTML = '';
+            let totals = {
+                itoIts: 0,
+                holdBySales: 0,
+                transformerOil: 0,
+                bulkOrder: 0,
+                toCancel: 0,
+                netShortfall: 0
+            };
+
+            actualCOBs.forEach(cob => {
+                const data = statusData[cob];
+                const rowTotal = data.itoIts + data.holdBySales + data.transformerOil + data.bulkOrder + data.toCancel + data.netShortfall;
+
+                totals.itoIts += data.itoIts;
+                totals.holdBySales += data.holdBySales;
+                totals.transformerOil += data.transformerOil;
+                totals.bulkOrder += data.bulkOrder;
+                totals.toCancel += data.toCancel;
+                totals.netShortfall += data.netShortfall;
+
+                const rowClass = cob.startsWith('Petromin') ? 'petromin-row' : '';
+
+                tableHTML += `
+            <tr class="${rowClass}">
+                <td>${cob}</td>
+                <td>${data.itoIts.toFixed(0)}</td>
+                <td>${data.holdBySales.toFixed(0)}</td>
+                <td>${data.transformerOil.toFixed(0)}</td>
+                <td>${data.bulkOrder.toFixed(0)}</td>
+                <td>${data.toCancel.toFixed(0)}</td>
+                <td>${data.netShortfall.toFixed(0)}</td>
+                <td><strong>${rowTotal.toFixed(0)}</strong></td>
+            </tr>
+        `;
+            });
+
+            const grandTotal = totals.itoIts + totals.holdBySales + totals.transformerOil + totals.bulkOrder + totals.toCancel + totals.netShortfall;
+
+            tableHTML += `
+        <tr class="total-row">
+            <td>Total MT</td>
+            <td>${totals.itoIts.toFixed(0)}</td>
+            <td>${totals.holdBySales.toFixed(0)}</td>
+            <td>${totals.transformerOil.toFixed(0)}</td>
+            <td>${totals.bulkOrder.toFixed(0)}</td>
+            <td>${totals.toCancel.toFixed(0)}</td>
+            <td>${totals.netShortfall.toFixed(0)}</td>
+            <td>${grandTotal.toFixed(0)}</td>
+        </tr>
+    `;
+
+            document.getElementById('stockNotAvailableBody').innerHTML = tableHTML;
+        }
+        function generateStockAvailableStatusTable() {
+            const statusData = {};
+
+            actualCOBs.forEach(cob => {
+                statusData[cob] = {
+                    picked: 0,
+                    toBePicked: 0,
+                    inTransit: 0,
+                    bulkOrder: 0,
+                    selfCollection: 0,
+                    holdBySales: 0
+                };
+            });
+
+            holdFreeOrdersProcessed.forEach(order => {
+                let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+
+                if (actualCOBs.includes(cob)) {
+                    const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                    const stockStatus = (order['Stock Status'] || '').toString().trim();
+                    const comments = (order['Comments'] || '').toString().trim();
+
+                    if (stockStatus === 'Picked' && comments === 'Logistics to Ship') {
+                        statusData[cob].picked += qtyMT;
+                    }
+
+                    if (stockStatus === 'Stock Available' && comments === 'Logistics to Ship') {
+                        statusData[cob].toBePicked += qtyMT;
+                    }
+
+                    // Updated condition for In-transit / Under Production
+                    if (stockStatus === 'Stock Available' &&
+                        (comments.toLowerCase() === 'in-transit' ||
+                            comments.toLowerCase() === 'under production' ||
+                            comments === 'in-transit' ||
+                            comments === 'Under Production')) {
+                        statusData[cob].inTransit += qtyMT;
+                    }
+
+                    if (stockStatus === 'Picked' && comments === 'Bulk Team to Confirm') {
+                        statusData[cob].bulkOrder += qtyMT;
+                    }
+
+                    if (comments === 'Self Collection') {
+                        statusData[cob].selfCollection += qtyMT;
+                    }
+
+                    if (stockStatus === 'Stock Available' && comments === 'Hold by Sales') {
+                        statusData[cob].holdBySales += qtyMT;
+                    }
+                }
+            });
+
+            let tableHTML = '';
+            let totals = {
+                picked: 0,
+                toBePicked: 0,
+                inTransit: 0,
+                bulkOrder: 0,
+                selfCollection: 0,
+                holdBySales: 0
+            };
+
+            actualCOBs.forEach(cob => {
+                const data = statusData[cob];
+                const rowTotal = data.picked + data.toBePicked + data.inTransit + data.bulkOrder + data.selfCollection + data.holdBySales;
+
+                totals.picked += data.picked;
+                totals.toBePicked += data.toBePicked;
+                totals.inTransit += data.inTransit;
+                totals.bulkOrder += data.bulkOrder;
+                totals.selfCollection += data.selfCollection;
+                totals.holdBySales += data.holdBySales;
+
+                const rowClass = cob.startsWith('Petromin') ? 'petromin-row' : '';
+
+                tableHTML += `
+            <tr class="${rowClass}">
+                <td>${cob}</td>
+                <td>${data.picked.toFixed(0)}</td>
+                <td>${data.toBePicked.toFixed(0)}</td>
+                <td>${data.inTransit.toFixed(0)}</td>
+                <td>${data.bulkOrder.toFixed(0)}</td>
+                <td>${data.selfCollection.toFixed(0)}</td>
+                <td>${data.holdBySales.toFixed(0)}</td>
+                <td><strong>${rowTotal.toFixed(0)}</strong></td>
+            </tr>
+        `;
+            });
+
+            const grandTotal = totals.picked + totals.toBePicked + totals.inTransit + totals.bulkOrder + totals.selfCollection + totals.holdBySales;
+
+            tableHTML += `
+        <tr class="total-row">
+            <td>Total MT</td>
+            <td>${totals.picked.toFixed(0)}</td>
+            <td>${totals.toBePicked.toFixed(0)}</td>
+            <td>${totals.inTransit.toFixed(0)}</td>
+            <td>${totals.bulkOrder.toFixed(0)}</td>
+            <td>${totals.selfCollection.toFixed(0)}</td>
+            <td>${totals.holdBySales.toFixed(0)}</td>
+            <td>${grandTotal.toFixed(0)}</td>
+        </tr>
+    `;
+
+            document.getElementById('stockAvailableStatusBody').innerHTML = tableHTML;
+        }
+        function generateActionForPivotTable() {
+            const COMMENT_FILTER = 'Logistics to Ship';
+
+            function hasTargetComment(order) {
+                const c = (order['Comments'] ?? '').toString().trim();
+                return c === COMMENT_FILTER;
+            }
+
+            const rawActions = new Set();
+            holdFreeOrdersProcessed.forEach(order => {
+                if (!hasTargetComment(order)) return;
+                const action = (order['Action For'] ?? '').toString().trim();
+                if (action) rawActions.add(action);
+            });
+
+            const preferred = ['Jeddah', 'Riyadh', 'Jubail', 'Dammam'];
+            const extras = Array.from(rawActions).filter(a => !preferred.includes(a)).sort((a, b) => a.localeCompare(b));
+            const actionCols = [...preferred.filter(a => rawActions.has(a)), ...extras];
+
+            if (actionCols.length === 0) {
+                document.getElementById('actionForHead').innerHTML =
+                    '<tr><th>Business</th><th>Total</th></tr>';
+                document.getElementById('actionForBody').innerHTML =
+                    '<tr><td colspan="2" style="text-align:center;color:#718096;">No rows with "Logistics to Ship"</td></tr>';
+                return;
+            }
+
+            const data = {};
+            actualCOBs.forEach(cob => { data[cob] = Object.fromEntries(actionCols.map(a => [a, 0])); });
+
+            holdFreeOrdersProcessed.forEach(order => {
+                if (!hasTargetComment(order)) return;
+
+                let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+                if (!actualCOBs.includes(cob)) return;
+
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                const action = (order['Action For'] ?? '').toString().trim();
+                if (!action || !actionCols.includes(action)) return;
+
+                data[cob][action] += qtyMT;
+            });
+
+            let headHTML = '<tr><th>Business</th>';
+            actionCols.forEach(a => { headHTML += `<th>${a}</th>`; });
+            headHTML += '<th>Total</th></tr>';
+            document.getElementById('actionForHead').innerHTML = headHTML;
+
+            let bodyHTML = '';
+            const colTotals = Object.fromEntries(actionCols.map(a => [a, 0]));
+            let grandTotal = 0;
+
+            actualCOBs.forEach(cob => {
+                const row = data[cob];
+                let rowTotal = 0;
+                const cls = cob.startsWith('Petromin') ? 'petromin-row' : '';
+                bodyHTML += `<tr class="${cls}"><td>${cob}</td>`;
+
+                actionCols.forEach(a => {
+                    const v = row[a] || 0;
+                    rowTotal += v;
+                    colTotals[a] += v;
+                    bodyHTML += `<td>${v.toFixed(0)}</td>`;
+                });
+
+                grandTotal += rowTotal;
+                bodyHTML += `<td><strong>${rowTotal.toFixed(0)}</strong></td></tr>`;
+            });
+
+            bodyHTML += '<tr class="total-row"><td>Total MT</td>';
+            actionCols.forEach(a => { bodyHTML += `<td>${colTotals[a].toFixed(0)}</td>`; });
+            bodyHTML += `<td>${grandTotal.toFixed(0)}</td></tr>`;
+
+            document.getElementById('actionForBody').innerHTML = bodyHTML;
+        }
+
+        function buildStockAvailabilityChartData() {
+            const data = {};
+            actualCOBs.forEach(c => data[c] = { available: 0, notAvailable: 0 });
+
+            holdFreeOrdersProcessed.forEach(order => {
+                let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+                if (!actualCOBs.includes(cob)) return;
+
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                const status = order['Stock Status'];
+
+                if (status === 'Stock Available' || status === 'Picked') {
+                    data[cob].available += qtyMT;
+                } else if (status === 'In-sufficient Stock' || status === 'Order Need to Cancel' || status === 'Bulk Order') {
+                    data[cob].notAvailable += qtyMT;
+                }
+            });
+
+            return {
+                labels: actualCOBs.slice(),
+                available: actualCOBs.map(c => data[c].available),
+                notAvailable: actualCOBs.map(c => data[c].notAvailable)
+            };
+        }
+
+        function buildNotAvailableStatusChartData() {
+            const buckets = ['ITO/ITS Grades', 'Hold by Sales', 'BULK Order', 'Order to Be Cancelled', 'Net Shortfall'];
+            const acc = {};
+            actualCOBs.forEach(c => acc[c] = [0, 0, 0, 0, 0]);
+
+            holdFreeOrdersProcessed.forEach(order => {
+                let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+                if (!actualCOBs.includes(cob)) return;
+
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                const status = order['Stock Status'];
+                const comments = (order['Comments'] || '').toString().trim();
+
+                if (comments === 'ETA: TBC') acc[cob][0] += qtyMT;
+                if (status === 'In-sufficient Stock' && comments === 'Hold by Sales') acc[cob][1] += qtyMT;
+                if (status === 'Bulk Order' && comments === 'Hold by Sales') acc[cob][2] += qtyMT;
+                if (comments === 'Order Need to Cancel') acc[cob][3] += qtyMT;
+                if (comments === 'ERD: TBC' || comments === 'ERD:TBC') acc[cob][4] += qtyMT;
+            });
+
+            return {
+                labels: actualCOBs.slice(),
+                buckets,
+                series: buckets.map((_, i) => actualCOBs.map(c => acc[c][i]))
+            };
+        }
+
+        function buildAvailableStatusChartData() {
+            const buckets = ['Picked', 'To be Picked', 'In-transit / Under Production', 'BULK Order', 'Self-Collection', 'Hold by Sales'];
+            const acc = {};
+            actualCOBs.forEach(c => acc[c] = [0, 0, 0, 0, 0, 0]);
+
+            holdFreeOrdersProcessed.forEach(order => {
+                let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                cob = cob.toString().trim();
+                if (!actualCOBs.includes(cob)) return;
+
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                const status = order['Stock Status'];
+                const comments = (order['Comments'] || '').toString().trim();
+
+                if (status === 'Picked' && comments === 'Logistics to Ship') acc[cob][0] += qtyMT;
+                if (status === 'Stock Available' && comments === 'Logistics to Ship') acc[cob][1] += qtyMT;
+                if (status === 'Stock Available' && (comments === 'in-transit' || comments === 'Under Production')) acc[cob][2] += qtyMT;
+                if (status === 'Picked' && comments === 'Bulk Team to Confirm') acc[cob][3] += qtyMT;
+                if (comments === 'Self Collection') acc[cob][4] += qtyMT;
+                if (status === 'Stock Available' && comments === 'Hold by Sales') acc[cob][5] += qtyMT;
+            });
+
+            return {
+                labels: actualCOBs.slice(),
+                buckets,
+                series: buckets.map((_, i) => actualCOBs.map(c => acc[c][i]))
+            };
+        }
+
+        function buildVolumeByWarehouseData() {
+            const locs = ['Jeddah', 'Riyadh', 'Dammam', 'Abha'];
+            const sums = { Jeddah: 0, Riyadh: 0, Dammam: 0, Abha: 0 };
+            holdFreeOrdersProcessed.forEach(order => {
+                const comments = (order['Comments'] || '').toString().trim();
+                if (comments !== 'Logistics to Ship') return;
+                const action = (order['Action For'] || '').toString().trim();
+                if (!locs.includes(action)) return;
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                sums[action] += qtyMT;
+            });
+            return { labels: locs, values: locs.map(l => sums[l]) };
+        }
+
+        function updateCharts() {
+            if (!cobData) return;
+
+            const cobs = actualCOBs.slice();
+            Object.values(charts).forEach(ch => { try { ch && ch.destroy(); } catch (_) { } });
+            charts = {};
+
+            const palette = [
+                'rgba(102,126,234,0.8)',
+                'rgba(118,75,162,0.8)',
+                'rgba(240,147,251,0.8)',
+                'rgba(245,187,87,0.8)',
+                'rgba(251,191,36,0.8)',
+                'rgba(72,187,120,0.8)',
+                'rgba(245,87,108,0.8)',
+            ];
+
+            function ctx(id) { const el = document.getElementById(id); return el ? el.getContext('2d') : null; }
+            function mkStackedBar(context, labels, datasets, yLabel) {
+                return new Chart(context, {
+                    type: 'bar',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            x: { stacked: true, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } },
+                            y: { stacked: true, title: { display: true, text: yLabel || 'Quantity (MT)' } }
+                        },
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${(+c.parsed.y).toFixed(2)} MT` } }
+                        }
+                    }
+                });
+            }
+
+            const stacked = ctx('stackedBarChart');
+            if (stacked) {
+                charts.stacked = mkStackedBar(
+                    stacked,
+                    cobs,
+                    [
+                        {
+                            label: 'Orders on Credit Hold',
+                            data: cobs.map(c => cobData.creditHold[c] || 0),
+                            backgroundColor: 'rgba(245,87,108,0.8)',
+                            borderColor: 'rgba(245,87,108,1)', borderWidth: 1
+                        },
+                        {
+                            label: 'Hold Free Orders',
+                            data: cobs.map(c => cobData.holdFree[c] || 0),
+                            backgroundColor: 'rgba(72,187,120,0.8)',
+                            borderColor: 'rgba(72,187,120,1)', borderWidth: 1
+                        }
+                    ]
+                );
+            }
+
+            const creditHoldPie = ctx('creditHoldPieChart');
+            if (creditHoldPie) {
+                charts.creditHold = new Chart(creditHoldPie, {
+                    type: 'pie',
+                    data: { labels: cobs, datasets: [{ data: cobs.map(c => cobData.creditHold[c] || 0), backgroundColor: palette }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${(+c.parsed).toFixed(2)} MT` } } } }
+                });
+            }
+
+            const holdFreePie = ctx('holdFreePieChart');
+            if (holdFreePie) {
+                charts.holdFree = new Chart(holdFreePie, {
+                    type: 'pie',
+                    data: { labels: cobs, datasets: [{ data: cobs.map(c => cobData.holdFree[c] || 0), backgroundColor: palette }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${(+c.parsed).toFixed(2)} MT` } } } }
+                });
+            }
+
+            const totalDonut = ctx('totalDonutChart');
+            if (totalDonut) {
+                charts.total = new Chart(totalDonut, {
+                    type: 'doughnut',
+                    data: { labels: cobs, datasets: [{ data: cobs.map(c => (cobData.creditHold[c] || 0) + (cobData.holdFree[c] || 0)), backgroundColor: palette, hoverOffset: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${(+c.parsed).toFixed(2)} MT` } } } }
+                });
+            }
+
+            const saData = buildStockAvailabilityChartData();
+            const saCtx = ctx('stockAvailabilityChart');
+            if (saCtx) {
+                charts.stockAvailability = mkStackedBar(
+                    saCtx,
+                    saData.labels,
+                    [
+                        { label: 'Available', data: saData.available, backgroundColor: 'rgba(72,187,120,0.8)' },
+                        { label: 'Not Available', data: saData.notAvailable, backgroundColor: 'rgba(245,87,108,0.8)' }
+                    ]
+                );
+            }
+
+            const naData = buildNotAvailableStatusChartData();
+            const naCtx = ctx('notAvailableStatusChart');
+            if (naCtx) {
+                charts.notAvailableStatus = mkStackedBar(
+                    naCtx,
+                    naData.labels,
+                    naData.buckets.map((b, i) => ({
+                        label: b,
+                        data: naData.series[i],
+                        backgroundColor: palette[i % palette.length]
+                    }))
+                );
+            }
+
+            const avData = buildAvailableStatusChartData();
+            const avCtx = ctx('availableStatusChart');
+            if (avCtx) {
+                charts.availableStatus = mkStackedBar(
+                    avCtx,
+                    avData.labels,
+                    avData.buckets.map((b, i) => ({
+                        label: b,
+                        data: avData.series[i],
+                        backgroundColor: palette[(i + 1) % palette.length]
+                    }))
+                );
+            }
+
+            const vwData = buildVolumeByWarehouseData();
+            const vwCtx = ctx('volumeByWarehouseChart');
+            if (vwCtx) {
+                charts.volumeByWarehouse = new Chart(vwCtx, {
+                    type: 'bar',
+                    data: { labels: vwData.labels, datasets: [{ label: 'Qty MT', data: vwData.values, backgroundColor: 'rgba(102,126,234,0.8)' }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { y: { title: { display: true, text: 'Quantity (MT)' } } },
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${(+c.parsed.y).toFixed(2)} MT` } } }
+                    }
+                });
+            }
+        }
+
+        function processMergedInventoryData() {
+            const targetSubInv = ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL',
+                'RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL',
+                'UFGP', 'UEXP', 'UFPE',
+                'AFGP', 'AFPE'];
+
+            const onhandMap = new Map();
+            const onhandSubInventories = new Set();
+            const onhandItems = new Set();
+
+            inventoryData.forEach(row => {
+                const subInventory = getColumnValue(row, ['Sub Inventory', 'Sub Inventory ', 'SubInventory']);
+                const itemNumber = getColumnValue(row, ['Item Number', 'ItemNumber', 'Item_Number']);
+                const onHandQty = parseFloat(getColumnValue(row, ['On Hand Qty', 'OnHandQty', 'On_Hand_Qty'])) || 0;
+
+                if (subInventory && itemNumber && targetSubInv.includes(subInventory)) {
+                    onhandSubInventories.add(subInventory);
+                    const itemStr = String(itemNumber);
+                    onhandItems.add(itemStr);
+
+                    const key = `${itemStr}_${subInventory}`;
+                    const existingQty = onhandMap.get(key) || 0;
+                    onhandMap.set(key, existingQty + onHandQty);
+
+                    if (!inventorySummary[itemStr]) {
+                        inventorySummary[itemStr] = {};
+                    }
+                    inventorySummary[itemStr][subInventory] = (inventorySummary[itemStr][subInventory] || 0) + onHandQty;
+                }
+            });
+
+            console.log(`On-hand: ${onhandSubInventories.size} sub-inventories, ${onhandItems.size} items`);
+
+            const targetOrgCodes = ['JE0', 'RY0', 'JU0', 'AFG'];
+            const intransitMap = new Map();
+            const intransitOrgCodes = new Set();
+            const intransitItems = new Set();
+
+            intransitData.forEach(row => {
+                const toOrgCode = getColumnValue(row, ['To Org Code', 'ToOrgCode']);
+                const itemCode = getColumnValue(row, ['Item code', 'ItemCode', 'Item Code']);
+                const qtyPending = parseFloat(getColumnValue(row, ['Quantity Pending', 'QuantityPending', 'Qty Pending'])) || 0;
+
+                if (toOrgCode && itemCode && targetOrgCodes.includes(toOrgCode)) {
+                    intransitOrgCodes.add(toOrgCode);
+                    const itemStr = String(itemCode).padStart(8, '0');
+                    intransitItems.add(itemStr);
+
+                    const key = `${itemStr}_${toOrgCode}`;
+                    const existingQty = intransitMap.get(key) || 0;
+                    intransitMap.set(key, existingQty + qtyPending);
+
+                    if (!inventorySummary[itemStr]) {
+                        inventorySummary[itemStr] = {};
+                    }
+                    inventorySummary[itemStr][toOrgCode] = (inventorySummary[itemStr][toOrgCode] || 0) + qtyPending;
+                }
+            });
+
+            console.log(`In-transit: ${intransitOrgCodes.size} org codes, ${intransitItems.size} items`);
+
+            const allItems = new Set([...onhandItems, ...intransitItems]);
+            const sortedItems = Array.from(allItems).sort((a, b) => {
+                const aNum = parseInt(a);
+                const bNum = parseInt(b);
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return aNum - bNum;
+                }
+                return String(a).localeCompare(String(b));
+            });
+
+            const sortedOnhandCols = Array.from(onhandSubInventories).sort();
+            const sortedIntransitCols = Array.from(intransitOrgCodes).sort();
+
+            let headerHTML = '<tr>';
+            headerHTML += '<th rowspan="2">Item Number</th>';
+
+            if (sortedOnhandCols.length > 0) {
+                headerHTML += `<th colspan="${sortedOnhandCols.length}" class="group-header">ON-HAND INVENTORY</th>`;
+            }
+
+            if (sortedIntransitCols.length > 0) {
+                headerHTML += `<th colspan="${sortedIntransitCols.length}" class="group-header">IN-TRANSIT</th>`;
+            }
+
+            headerHTML += '<th rowspan="2">Grand Total</th>';
+            headerHTML += '</tr>';
+
+            headerHTML += '<tr>';
+            sortedOnhandCols.forEach(col => {
+                headerHTML += `<th>${col}</th>`;
+            });
+            sortedIntransitCols.forEach(col => {
+                headerHTML += `<th style="background: #3182ce;">${col}</th>`;
+            });
+            headerHTML += '</tr>';
+
+            document.getElementById('matrixHead').innerHTML = headerHTML;
+
+            let bodyHTML = '';
+            sortedItems.forEach(itemNum => {
+                bodyHTML += `<tr><td>${itemNum}</td>`;
+                let rowTotal = 0;
+
+                sortedOnhandCols.forEach(subInv => {
+                    const key = `${itemNum}_${subInv}`;
+                    const qty = onhandMap.get(key) || 0;
+                    rowTotal += qty;
+
+                    if (qty === 0) {
+                        bodyHTML += `<td class="zero-qty">-</td>`;
+                    } else {
+                        bodyHTML += `<td class="positive-qty">${qty.toLocaleString()}</td>`;
+                    }
+                });
+
+                sortedIntransitCols.forEach(orgCode => {
+                    const key = `${itemNum}_${orgCode}`;
+                    const qty = intransitMap.get(key) || 0;
+                    rowTotal += qty;
+
+                    if (qty === 0) {
+                        bodyHTML += `<td class="zero-qty">-</td>`;
+                    } else {
+                        bodyHTML += `<td class="intransit-qty">${qty.toLocaleString()}</td>`;
+                    }
+                });
+
+                bodyHTML += `<td style="background: #f7fafc; font-weight: bold; text-align: right;">${rowTotal.toLocaleString()}</td>`;
+                bodyHTML += '</tr>';
+            });
+
+            bodyHTML += '<tr style="background: #e2e8f0; font-weight: bold;"><td>Total</td>';
+            let grandTotal = 0;
+
+            sortedOnhandCols.forEach(subInv => {
+                let colTotal = 0;
+                sortedItems.forEach(itemNum => {
+                    const key = `${itemNum}_${subInv}`;
+                    colTotal += onhandMap.get(key) || 0;
+                });
+                grandTotal += colTotal;
+                bodyHTML += `<td style="text-align: right;">${colTotal.toLocaleString()}</td>`;
+            });
+
+            sortedIntransitCols.forEach(orgCode => {
+                let colTotal = 0;
+                sortedItems.forEach(itemNum => {
+                    const key = `${itemNum}_${orgCode}`;
+                    colTotal += intransitMap.get(key) || 0;
+                });
+                grandTotal += colTotal;
+                bodyHTML += `<td style="text-align: right; background: #e6f4ea;">${colTotal.toLocaleString()}</td>`;
+            });
+
+            bodyHTML += `<td style="background: #cbd5e0; text-align: right;">${grandTotal.toLocaleString()}</td></tr>`;
+
+            document.getElementById('matrixBody').innerHTML = bodyHTML;
+        }
+
+        let activeFilters = {
+            releaseDateFrom: null,
+            releaseDateTo: null,
+            orderNumber: '',
+            customer: '',
+            cob: '',
+            orgCode: '',
+            shippingStatus: '',
+            shippingInstruction: '',
+            uom: '',
+            item: '',
+            qtyMin: null,
+            qtyMax: null,
+            stockStatus: '',
+            comments: '',
+            actionFor: '',
+            aramcoOrNot: ''
+        };
+
+        function initializeFilters() {
+            populateFilterDropdown('filterCOB', 'COB');
+            populateFilterDropdown('filterOrgCode', 'ORGANIZATION_CODE');
+            populateFilterDropdown('filterShippingStatus', 'SHIPPING_STATUS');
+            populateFilterDropdown('filterUOM', 'UOM1');
+            populateFilterDropdown('filterStockStatus', 'Stock Status');
+            populateFilterDropdown('filterComments', 'Comments');
+            populateFilterDropdown('filterActionFor', 'Action For');
+            populateFilterDropdown('filterAramcoOrNot', 'Aramco or Not');
+
+            attachFilterListeners();
+            updateFilterCount();
+        }
+
+        function populateFilterDropdown(elementId, fieldKey) {
+            const uniqueValues = new Set();
+
+            holdFreeOrdersProcessed.forEach(order => {
+                let value;
+                if (fieldKey === 'Stock Status' || fieldKey === 'Comments' || fieldKey === 'Action For') {
+                    value = order[fieldKey];
+                } else {
+                    value = getColumnValue(order, [fieldKey, fieldKey.replace('_', ' ')]);
+                }
+
+                if (value && value !== '' && value !== null && value !== undefined) {
+                    uniqueValues.add(String(value).trim());
+                }
+            });
+
+            const select = document.getElementById(elementId);
+            if (!select) return;
+
+            select.innerHTML = '<option value="">All</option>';
+
+            Array.from(uniqueValues).sort().forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                select.appendChild(option);
+            });
+        }
+
+        function attachFilterListeners() {
+            document.getElementById('filterReleaseDateFrom')?.addEventListener('change', applyFilters);
+            document.getElementById('filterReleaseDateTo')?.addEventListener('change', applyFilters);
+
+            document.getElementById('filterOrderNumber')?.addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('filterCustomer')?.addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('filterShippingInstruction')?.addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('filterItem')?.addEventListener('input', debounce(applyFilters, 300));
+
+            document.getElementById('filterCOB')?.addEventListener('change', applyFilters);
+            document.getElementById('filterOrgCode')?.addEventListener('change', applyFilters);
+            document.getElementById('filterShippingStatus')?.addEventListener('change', applyFilters);
+            document.getElementById('filterUOM')?.addEventListener('change', applyFilters);
+            document.getElementById('filterStockStatus')?.addEventListener('change', applyFilters);
+            document.getElementById('filterComments')?.addEventListener('change', applyFilters);
+            document.getElementById('filterActionFor')?.addEventListener('change', applyFilters);
+            document.getElementById('filterAramcoOrNot')?.addEventListener('change', applyFilters);
+
+            document.getElementById('filterQtyMin')?.addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('filterQtyMax')?.addEventListener('input', debounce(applyFilters, 300));
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function applyFilters() {
+            activeFilters = {
+                releaseDateFrom: document.getElementById('filterReleaseDateFrom')?.value || null,
+                releaseDateTo: document.getElementById('filterReleaseDateTo')?.value || null,
+                orderNumber: document.getElementById('filterOrderNumber')?.value.toLowerCase().trim() || '',
+                customer: document.getElementById('filterCustomer')?.value.toLowerCase().trim() || '',
+                cob: document.getElementById('filterCOB')?.value || '',
+                orgCode: document.getElementById('filterOrgCode')?.value || '',
+                shippingStatus: document.getElementById('filterShippingStatus')?.value || '',
+                shippingInstruction: document.getElementById('filterShippingInstruction')?.value.toLowerCase().trim() || '',
+                uom: document.getElementById('filterUOM')?.value || '',
+                item: document.getElementById('filterItem')?.value.toLowerCase().trim() || '',
+                qtyMin: parseFloat(document.getElementById('filterQtyMin')?.value) || null,
+                qtyMax: parseFloat(document.getElementById('filterQtyMax')?.value) || null,
+                stockStatus: document.getElementById('filterStockStatus')?.value || '',
+                comments: document.getElementById('filterComments')?.value || '',
+                actionFor: document.getElementById('filterActionFor')?.value || '',
+                aramcoOrNot: document.getElementById('filterAramcoOrNot')?.value || ''
+            };
+
+            const filteredOrders = filterOrders();
+            displayFilteredOrders(filteredOrders);
+            updateFilterCount(filteredOrders.length);
+        }
+
+        function filterOrders() {
+            return holdFreeOrdersProcessed.filter(order => {
+                if (activeFilters.releaseDateFrom || activeFilters.releaseDateTo) {
+                    const releaseDateStr = getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']);
+                    const releaseDate = parseDate(releaseDateStr);
+
+                    if (activeFilters.releaseDateFrom && releaseDate) {
+                        const fromDate = new Date(activeFilters.releaseDateFrom);
+                        if (releaseDate < fromDate) return false;
+                    }
+
+                    if (activeFilters.releaseDateTo && releaseDate) {
+                        const toDate = new Date(activeFilters.releaseDateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        if (releaseDate > toDate) return false;
+                    }
+                }
+
+                if (activeFilters.orderNumber) {
+                    const orderNumber = String(getColumnValue(order, ['ORDER_NO', 'Order Number', 'ORDER NUMBER']) || '').toLowerCase();
+                    if (!orderNumber.includes(activeFilters.orderNumber)) return false;
+                }
+
+                if (activeFilters.customer) {
+                    const customer = String(getColumnValue(order, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']) || '').toLowerCase();
+                    if (!customer.includes(activeFilters.customer)) return false;
+                }
+
+                if (activeFilters.cob) {
+                    const cob = String(getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '');
+                    if (cob !== activeFilters.cob) return false;
+                }
+
+                if (activeFilters.orgCode) {
+                    const orgCode = String(getColumnValue(order, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']) || '');
+                    if (orgCode !== activeFilters.orgCode) return false;
+                }
+
+                if (activeFilters.shippingStatus) {
+                    const shippingStatus = String(getColumnValue(order, ['SHIPPING_STATUS', 'Shipping Status', 'SHIPPING STATUS']) || '');
+                    if (shippingStatus !== activeFilters.shippingStatus) return false;
+                }
+
+                if (activeFilters.shippingInstruction) {
+                    const instruction = String(getColumnValue(order, ['SHIPPING_INSTRUCTIONS', 'Shipping Instruction', 'SHIPPING INSTRUCTION']) || '').toLowerCase();
+                    if (!instruction.includes(activeFilters.shippingInstruction)) return false;
+                }
+
+                if (activeFilters.uom) {
+                    const uom = String(getColumnValue(order, ['UOM1', 'UOM', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '');
+                    if (uom !== activeFilters.uom) return false;
+                }
+
+                if (activeFilters.item) {
+                    const item = String(getColumnValue(order, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']) || '').toLowerCase();
+                    if (!item.includes(activeFilters.item)) return false;
+                }
+
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                if (activeFilters.qtyMin !== null && qtyMT < activeFilters.qtyMin) return false;
+                if (activeFilters.qtyMax !== null && qtyMT > activeFilters.qtyMax) return false;
+
+                if (activeFilters.stockStatus) {
+                    if (order['Stock Status'] !== activeFilters.stockStatus) return false;
+                }
+
+                if (activeFilters.comments) {
+                    if (order['Comments'] !== activeFilters.comments) return false;
+                }
+
+                if (activeFilters.actionFor) {
+                    if (order['Action For'] !== activeFilters.actionFor) return false;
+                }
+
+                if (activeFilters.aramcoOrNot) {
+                    if (order['Aramco or Not'] !== activeFilters.aramcoOrNot) return false;
+                }
+
+                return true;
+            });
+        }
+
+        function displayFilteredOrders(filteredOrders) {
+            let tableHTML = '';
+
+            filteredOrders.forEach((order, index) => {
+                const releaseDate = parseDate(getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']));
+                const orderNumber = getColumnValue(order, ['ORDER_NO', 'Order Number', 'ORDER NUMBER']) || '';
+                const customerNumber = getColumnValue(order, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']) || '';
+                const cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
+                const orgCode = getColumnValue(order, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']) || '';
+                const itemNumber = getColumnValue(order, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']) || '';
+                const originalOrderQty = parseFloat(getColumnValue(order, ['ORIGINAL_ORDER_QTY', 'Original Order Qty', 'ORIGINAL ORDER QTY'])) || 0;
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                const shippingStatus = getColumnValue(order, ['SHIPPING_STATUS', 'Shipping Status', 'SHIPPING STATUS']) || '';
+                const shippingInstruction = getColumnValue(order, ['SHIPPING_INSTRUCTIONS', 'Shipping Instruction', 'SHIPPING INSTRUCTION']) || '';
+                const uom = getColumnValue(order, ['UOM1', 'UOM', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
+
+                const formattedDate = releaseDate ? formatDate(releaseDate) : 'No Date';
+
+                const stockStatus = order['Stock Status'] || '';
+                const comments = order['Comments'] || '';
+                const actionFor = order['Action For'] || '';
+                const aramcoOrNot = order['Aramco or Not'] || '';
+
+                let stockStatusClass = '';
+                if (stockStatus === 'Stock Available') stockStatusClass = 'stock-available-cell';
+                else if (stockStatus === 'In-sufficient Stock') stockStatusClass = 'stock-insufficient-cell';
+                else if (stockStatus === 'Bulk Order') stockStatusClass = 'bulk-order-cell';
+                else if (stockStatus === 'Picked') stockStatusClass = 'picked-cell';
+                else if (stockStatus === 'Order Need to Cancel') stockStatusClass = 'stock-insufficient-cell';
+
+                let aramcoClass = '';
+                if (aramcoOrNot === 'Aramco') aramcoClass = 'aramco-cell';
+                else if (aramcoOrNot === 'Not Aramco') aramcoClass = 'not-aramco-cell';
+
+                // Highlight decimal values in Original Order Qty
+                const hasDecimal = (originalOrderQty % 1 !== 0);
+                const originalQtyClass = hasDecimal ? 'stock-insufficient-cell' : '';
+                const originalQtyDisplay = originalOrderQty.toFixed(2);
+
+                tableHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${formattedDate}</td>
+                <td>${orderNumber}</td>
+                <td>${customerNumber}</td>
+                <td>${cob}</td>
+                <td>${orgCode}</td>
+                <td>${shippingStatus}</td>
+                <td>${shippingInstruction}</td>
+                <td>${uom}</td>
+                <td>${itemNumber}</td>
+                <td class="${originalQtyClass}">${originalQtyDisplay}</td>
+                <td>${qtyMT.toFixed(2)}</td>
+                <td class="${aramcoClass}">${aramcoOrNot}</td>
+                <td class="${stockStatusClass}">${stockStatus}</td>
+                <td>${comments}</td>
+                <td>${actionFor}</td>
+                <td>${order['Jeddah_Stock'].toFixed(0)}</td>
+                <td>${order['Riyadh_Stock'].toFixed(0)}</td>
+                <td>${order['Dammam_Stock'].toFixed(0)}</td>
+                <td>${order['Abha_Stock'].toFixed(0)}</td>
+            </tr>
+        `;
+            });
+
+            document.getElementById('orderDetailsBody').innerHTML = tableHTML;
+        }
+        function updateFilterCount(filteredCount) {
+            const total = holdFreeOrdersProcessed.length;
+            const count = filteredCount !== undefined ? filteredCount : total;
+
+            document.getElementById('filterCount').textContent = `Showing ${count} of ${total} orders`;
+
+            const hasActiveFilters = Object.values(activeFilters).some(value => {
+                if (value === null || value === '' || value === undefined) return false;
+                return true;
+            });
+
+            const clearBtn = document.getElementById('clearFiltersBtn');
+            if (clearBtn) {
+                clearBtn.disabled = !hasActiveFilters;
+            }
+        }
+
+        function clearAllFilters() {
+            document.getElementById('filterReleaseDateFrom').value = '';
+            document.getElementById('filterReleaseDateTo').value = '';
+            document.getElementById('filterOrderNumber').value = '';
+            document.getElementById('filterCustomer').value = '';
+            document.getElementById('filterCOB').value = '';
+            document.getElementById('filterOrgCode').value = '';
+            document.getElementById('filterShippingStatus').value = '';
+            document.getElementById('filterShippingInstruction').value = '';
+            document.getElementById('filterUOM').value = '';
+            document.getElementById('filterItem').value = '';
+            document.getElementById('filterQtyMin').value = '';
+            document.getElementById('filterQtyMax').value = '';
+            document.getElementById('filterStockStatus').value = '';
+            document.getElementById('filterComments').value = '';
+            document.getElementById('filterActionFor').value = '';
+            document.getElementById('filterAramcoOrNot').value = '';
+
+            activeFilters = {
+                releaseDateFrom: null,
+                releaseDateTo: null,
+                orderNumber: '',
+                customer: '',
+                cob: '',
+                orgCode: '',
+                shippingStatus: '',
+                shippingInstruction: '',
+                uom: '',
+                item: '',
+                qtyMin: null,
+                qtyMax: null,
+                stockStatus: '',
+                comments: '',
+                actionFor: '',
+                aramcoOrNot: ''
+            };
+
+            displayFilteredOrders(holdFreeOrdersProcessed);
+            updateFilterCount();
+        }
+        // ETA Items Management
+        let etaItemsModified = false;
+        let originalEtaItems = new Set();
+
+        // Initialize original ETA items on page load
+        function initializeEtaItems() {
+            originalEtaItems = new Set(etaItems);
+            displayEtaItems();
+            updateEtaStats();
+        }
+
+        function toggleEtaSection() {
+            const content = document.getElementById('etaContent');
+            const icon = document.getElementById('etaToggleIcon');
+
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                icon.classList.remove('expanded');
+            } else {
+                content.classList.add('show');
+                icon.classList.add('expanded');
+            }
+        }
+
+        function displayEtaItems() {
+            const grid = document.getElementById('etaItemsGrid');
+            const sortedItems = Array.from(etaItems).sort();
+
+            if (sortedItems.length === 0) {
+                grid.innerHTML = '<div class="eta-empty-state">No items added yet. Add product codes above.</div>';
+                return;
+            }
+
+            grid.innerHTML = sortedItems.map(item => `
+        <div class="eta-item-chip">
+            <span class="eta-item-code">${item}</span>
+            <button class="eta-item-delete" onclick="deleteEtaItem('${item}')" title="Remove">✕</button>
+        </div>
+    `).join('');
+        }
+
+        function addEtaItem() {
+            const input = document.getElementById('etaItemInput');
+            const itemCode = input.value.trim();
+
+            if (!itemCode) {
+                alert('Please enter a product code');
+                return;
+            }
+
+            if (etaItems.has(itemCode)) {
+                alert('This product code already exists in the list');
+                input.value = '';
+                return;
+            }
+
+            etaItems.add(itemCode);
+            etaItemsModified = true;
+
+            input.value = '';
+            displayEtaItems();
+            updateEtaStats();
+
+            // Show success feedback
+            input.style.borderColor = '#48bb78';
+            setTimeout(() => {
+                input.style.borderColor = '#cbd5e0';
+            }, 1000);
+        }
+
+        function deleteEtaItem(itemCode) {
+            if (confirm(`Remove product code "${itemCode}" from ETA items?`)) {
+                etaItems.delete(itemCode);
+                etaItemsModified = true;
+                displayEtaItems();
+                updateEtaStats();
+            }
+        }
+
+        function clearAllEtaItems() {
+            if (confirm('Are you sure you want to remove all ETA items? This will require reprocessing.')) {
+                etaItems.clear();
+                etaItemsModified = true;
+                displayEtaItems();
+                updateEtaStats();
+            }
+        }
+
+        function updateEtaStats() {
+            const totalCount = etaItems.size;
+            const hasChanged = etaItemsModified && (
+                etaItems.size !== originalEtaItems.size ||
+                !Array.from(etaItems).every(item => originalEtaItems.has(item))
+            );
+
+            document.getElementById('etaTotalCount').textContent = totalCount;
+            document.getElementById('etaCount').textContent = `(${totalCount} items)`;
+            document.getElementById('etaModifiedStatus').textContent = hasChanged ? 'Yes' : 'No';
+            document.getElementById('etaModifiedStatus').style.color = hasChanged ? '#e53e3e' : '#2d3748';
+
+            // Enable/disable reprocess button
+            const reprocessBtn = document.getElementById('etaReprocessBtn');
+            if (reprocessBtn) {
+                reprocessBtn.disabled = !hasChanged;
+            }
+        }
+
+        function reprocessWithNewEtaItems() {
+            if (!confirm('This will reprocess all orders with the updated ETA items list. Continue?')) {
+                return;
+            }
+
+            // Show processing message
+            const reprocessBtn = document.getElementById('etaReprocessBtn');
+            const originalText = reprocessBtn.textContent;
+            reprocessBtn.textContent = '⏳ Reprocessing...';
+            reprocessBtn.disabled = true;
+
+            // Small delay to show the message
+            setTimeout(() => {
+                try {
+                    // ============================================
+                    // CRITICAL: RESET PROCESSING VARIABLES
+                    // ============================================
+                    holdFreeOrdersProcessed = [];
+                    runningInventory = {};
+                    initialInventory = {};
+                    // ============================================
+
+                    // Rebuild inventory summary from scratch
+                    processMergedInventoryData();
+
+                    // Reprocess the FIFO allocation with new ETA items
+                    processHoldFreeOrdersWithFIFO();
+
+                    // Regenerate all tables and displays
+                    generateAnalysisTables();
+                    displayOrderDetails();
+
+                    // Update charts if we're on that tab
+                    if (cobData) {
+                        updateCharts();
+                    }
+
+                    // Update the original reference
+                    originalEtaItems = new Set(etaItems);
+                    etaItemsModified = false;
+                    updateEtaStats();
+
+                    // Show success message
+                    reprocessBtn.textContent = '✓ Reprocessed!';
+                    reprocessBtn.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+
+                    setTimeout(() => {
+                        reprocessBtn.textContent = originalText;
+                        reprocessBtn.style.background = '';
+                    }, 2000);
+
+                    alert('✓ Allocation reprocessed successfully with updated ETA items!');
+
+                } catch (error) {
+                    console.error('Error reprocessing:', error);
+                    alert('Error reprocessing allocation. Please check the console for details.');
+                    reprocessBtn.textContent = originalText;
+                    reprocessBtn.disabled = false;
+                }
+            }, 100);
+        }
+        // Call this after processing files to initialize the ETA section
+        function initializeEtaSectionAfterProcessing() {
+            initializeEtaItems();
+        }
+
+        // Initialize ETA Items on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeEtaItems();
+        });
+
+    </script>
+</body>
+
+</html>
