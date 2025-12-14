@@ -1919,6 +1919,7 @@
         let intransitData = null;
         let cobData = null;
         let holdFreeOrdersProcessed = [];
+        let filteredOrders = []; // Global variable to store filtered orders for consistent filtering across tabs
         let inventorySummary = {};
         let runningInventory = {};
         let initialInventory = {};
@@ -2546,6 +2547,132 @@
             document.getElementById('totalMT').textContent = `${totalMT.toFixed(2)} MT`;
         }
 
+        function updateDashboardWithFilteredData() {
+            // Recalculate dashboard statistics using filteredOrders
+            // Since holdFreeOrdersProcessed already contains only released orders,
+            // we just need to count from filteredOrders
+            let releasedCount = filteredOrders.length;
+            let releasedMT = 0;
+
+            filteredOrders.forEach(order => {
+                const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                releasedMT += qtyMT;
+            });
+
+            // For not released orders, we need to filter from original ordersData
+            let notReleasedCount = 0;
+            let notReleasedMT = 0;
+
+            ordersData.forEach(row => {
+                if (shouldExcludeOrder(row)) {
+                    return;
+                }
+
+                const releasedFlag = getColumnValue(row, ['RELEASED_FLAG', 'Released Flag', 'RELEASE_FLAG']);
+
+                // Only count not released orders
+                if (releasedFlag !== 'Y' && releasedFlag !== 'y' && releasedFlag !== true) {
+                    // Apply the same filters as in filterOrders()
+                    if (matchesActiveFilters(row)) {
+                        notReleasedCount++;
+                        const qtyMT = parseFloat(getColumnValue(row, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+                        notReleasedMT += qtyMT;
+                    }
+                }
+            });
+
+            const totalCount = releasedCount + notReleasedCount;
+            const totalMT = releasedMT + notReleasedMT;
+
+            document.getElementById('releasedCount').textContent = releasedCount.toLocaleString();
+            document.getElementById('releasedMT').textContent = `${releasedMT.toFixed(2)} MT`;
+            document.getElementById('notReleasedCount').textContent = notReleasedCount.toLocaleString();
+            document.getElementById('notReleasedMT').textContent = `${notReleasedMT.toFixed(2)} MT`;
+            document.getElementById('totalCount').textContent = totalCount.toLocaleString();
+            document.getElementById('totalMT').textContent = `${totalMT.toFixed(2)} MT`;
+        }
+
+        function matchesActiveFilters(order) {
+            // Helper function to check if an order matches the current active filters
+            if (activeFilters.releaseDateFrom || activeFilters.releaseDateTo) {
+                const releaseDateStr = getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']);
+                const releaseDate = parseDate(releaseDateStr);
+
+                if (activeFilters.releaseDateFrom && releaseDate) {
+                    const fromDate = new Date(activeFilters.releaseDateFrom);
+                    if (releaseDate < fromDate) return false;
+                }
+
+                if (activeFilters.releaseDateTo && releaseDate) {
+                    const toDate = new Date(activeFilters.releaseDateTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    if (releaseDate > toDate) return false;
+                }
+            }
+
+            if (activeFilters.orderNumber) {
+                const orderNumber = String(getColumnValue(order, ['ORDER_NO', 'Order Number', 'ORDER NUMBER']) || '').toLowerCase();
+                if (!orderNumber.includes(activeFilters.orderNumber)) return false;
+            }
+
+            if (activeFilters.customer) {
+                const customer = String(getColumnValue(order, ['CUSTOMER_NUMBER', 'Customer Number', 'CUSTOMER NUMBER']) || '').toLowerCase();
+                if (!customer.includes(activeFilters.customer)) return false;
+            }
+
+            if (activeFilters.cob) {
+                const cob = String(getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '');
+                if (cob !== activeFilters.cob) return false;
+            }
+
+            if (activeFilters.orgCode) {
+                const orgCode = String(getColumnValue(order, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']) || '');
+                if (orgCode !== activeFilters.orgCode) return false;
+            }
+
+            if (activeFilters.shippingStatus) {
+                const shippingStatus = String(getColumnValue(order, ['SHIPPING_STATUS', 'Shipping Status', 'SHIPPING STATUS']) || '');
+                if (shippingStatus !== activeFilters.shippingStatus) return false;
+            }
+
+            if (activeFilters.shippingInstruction) {
+                const instruction = String(getColumnValue(order, ['SHIPPING_INSTRUCTIONS', 'Shipping Instruction', 'SHIPPING INSTRUCTION']) || '').toLowerCase();
+                if (!instruction.includes(activeFilters.shippingInstruction)) return false;
+            }
+
+            if (activeFilters.uom) {
+                const uom = String(getColumnValue(order, ['UOM1', 'UOM', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '');
+                if (uom !== activeFilters.uom) return false;
+            }
+
+            if (activeFilters.item) {
+                const item = String(getColumnValue(order, ['Product_no', 'Product No', 'PRODUCT_NO', 'Item Number', 'ITEM_NUMBER']) || '').toLowerCase();
+                if (!item.includes(activeFilters.item)) return false;
+            }
+
+            const qtyMT = parseFloat(getColumnValue(order, ['QTY_MTON', 'Qty Mton', 'QTY_MT', 'Qty MT'])) || 0;
+            if (activeFilters.qtyMin !== null && qtyMT < activeFilters.qtyMin) return false;
+            if (activeFilters.qtyMax !== null && qtyMT > activeFilters.qtyMax) return false;
+
+            if (activeFilters.stockStatus) {
+                if (order['Stock Status'] !== activeFilters.stockStatus) return false;
+            }
+
+            if (activeFilters.comments) {
+                if (order['Comments'] !== activeFilters.comments) return false;
+            }
+
+            if (activeFilters.actionFor) {
+                if (order['Action For'] !== activeFilters.actionFor) return false;
+            }
+
+            if (activeFilters.aramcoOrNot) {
+                if (order['Aramco or Not'] !== activeFilters.aramcoOrNot) return false;
+            }
+
+            return true;
+        }
+
         function processCOBData() {
             // First, discover all unique COBs in the data
             const discoveredCOBs = new Set();
@@ -2945,9 +3072,12 @@
             };
         }
         function displayOrderDetails() {
+            // Initialize filteredOrders with all processed orders
+            filteredOrders = holdFreeOrdersProcessed;
+
             displayInventoryStatus('initialInventoryStatus', initialInventory);
             initializeFilters();
-            displayFilteredOrders(holdFreeOrdersProcessed);
+            displayFilteredOrders(filteredOrders);
             displayInventoryStatus('finalInventoryStatus', runningInventory);
         }
 
@@ -3001,8 +3131,9 @@
         }
 
         function exportOrderDetails() {
+            // Export filtered orders (filteredOrders contains either all or filtered subset)
             let csvContent = "Order #,Release Date,Order Number,Customer #,COB,Org Code,Shipping Status,Shipping Instruction,UOM,Item,Original Order Qty,Qty MT,Aramco or Not,Stock Status,Comments,Action For,Jeddah Stock,Riyadh Stock,Dammam Stock,Abha Stock\n";
-            holdFreeOrdersProcessed.forEach((order, index) => {
+            filteredOrders.forEach((order, index) => {
                 const releaseDate = parseDate(getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']));
                 const orderNumber = getColumnValue(order, ['ORDER_NO', 'ORDER_NUMBER', 'Order Number', 'ORDER NUMBER']) || '';
                 const customer = getColumnValue(order, ['CUSTOMER_NAME', 'Customer Name', 'CUSTOMER']) || '';
@@ -3094,7 +3225,8 @@
                 };
             });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            // Use filteredOrders for consistent filtering across all tabs
+            filteredOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
 
@@ -3164,7 +3296,8 @@
                 };
             });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            // Use filteredOrders for consistent filtering across all tabs
+            filteredOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
 
@@ -3275,7 +3408,8 @@
                 };
             });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            // Use filteredOrders for consistent filtering across all tabs
+            filteredOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
 
@@ -3377,8 +3511,9 @@
                 return c === COMMENT_FILTER;
             }
 
+            // Use filteredOrders for consistent filtering across all tabs
             const rawActions = new Set();
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (!hasTargetComment(order)) return;
                 const action = (order['Action For'] ?? '').toString().trim();
                 if (action) rawActions.add(action);
@@ -3399,7 +3534,7 @@
             const data = {};
             actualCOBs.forEach(cob => { data[cob] = Object.fromEntries(actionCols.map(a => [a, 0])); });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (!hasTargetComment(order)) return;
 
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
@@ -3450,7 +3585,8 @@
             const data = {};
             actualCOBs.forEach(c => data[c] = { available: 0, notAvailable: 0 });
 
-            holdFreeOrdersProcessed.forEach(order => {
+            // Use filteredOrders for consistent filtering across all tabs
+            filteredOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
                 if (!actualCOBs.includes(cob)) return;
@@ -3477,7 +3613,8 @@
             const acc = {};
             actualCOBs.forEach(c => acc[c] = [0, 0, 0, 0, 0]);
 
-            holdFreeOrdersProcessed.forEach(order => {
+            // Use filteredOrders for consistent filtering across all tabs
+            filteredOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
                 if (!actualCOBs.includes(cob)) return;
@@ -3505,7 +3642,8 @@
             const acc = {};
             actualCOBs.forEach(c => acc[c] = [0, 0, 0, 0, 0, 0]);
 
-            holdFreeOrdersProcessed.forEach(order => {
+            // Use filteredOrders for consistent filtering across all tabs
+            filteredOrders.forEach(order => {
                 let cob = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 cob = cob.toString().trim();
                 if (!actualCOBs.includes(cob)) return;
@@ -3532,7 +3670,9 @@
         function buildVolumeByWarehouseData() {
             const locs = ['Jeddah', 'Riyadh', 'Dammam', 'Abha'];
             const sums = { Jeddah: 0, Riyadh: 0, Dammam: 0, Abha: 0 };
-            holdFreeOrdersProcessed.forEach(order => {
+
+            // Use filteredOrders for consistent filtering across all tabs
+            filteredOrders.forEach(order => {
                 const comments = (order['Comments'] || '').toString().trim();
                 if (comments !== 'Logistics to Ship') return;
                 const action = (order['Action For'] || '').toString().trim();
@@ -3960,9 +4100,21 @@
                 aramcoOrNot: document.getElementById('filterAramcoOrNot')?.value || ''
             };
 
-            const filteredOrders = filterOrders();
+            // Update global filtered orders
+            filteredOrders = filterOrders();
+
+            // Update Order Details tab
             displayFilteredOrders(filteredOrders);
             updateFilterCount(filteredOrders.length);
+
+            // Update Dashboard tab statistics to use filtered data
+            updateDashboardWithFilteredData();
+
+            // Update all Analysis Tables to use filtered data
+            generateAnalysisTables();
+
+            // Update Charts if on charts tab
+            if (cobData) updateCharts();
         }
 
         function filterOrders() {
@@ -4168,8 +4320,21 @@
                 aramcoOrNot: ''
             };
 
-            displayFilteredOrders(holdFreeOrdersProcessed);
+            // Reset filteredOrders to all orders
+            filteredOrders = holdFreeOrdersProcessed;
+
+            // Update Order Details tab
+            displayFilteredOrders(filteredOrders);
             updateFilterCount();
+
+            // Update Dashboard tab
+            updateDashboardWithFilteredData();
+
+            // Update all Analysis Tables
+            generateAnalysisTables();
+
+            // Update Charts if available
+            if (cobData) updateCharts();
         }
         // ETA Items Management
         let etaItemsModified = false;
