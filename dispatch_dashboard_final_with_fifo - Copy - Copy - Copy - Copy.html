@@ -1661,7 +1661,7 @@
                     <!-- FILTERS SECTION -->
                     <div class="filters-container">
                         <div class="filter-header">
-                            <h3 class="filter-title">Filter Orders</h3>
+                            <h3 class="filter-title">🔍 Global Allocation Filters (Filters results AFTER FIFO allocation)</h3>
                             <button class="clear-filters-btn" id="clearFiltersBtn" onclick="clearAllFilters()" disabled>
                                 Clear All Filters
                             </button>
@@ -1693,28 +1693,73 @@
                                     placeholder="Search customer...">
                             </div>
 
-                            <!-- COB Filter -->
+                            <!-- COB Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="🏢">COB</label>
-                                <select id="filterCOB" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterCOB-button" onclick="toggleGlobalFilter('filterCOB')">
+                                        <span class="excel-filter-button-text" id="filterCOB-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterCOB">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterCOB', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterCOB', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterCOB-options"></div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Org Code Filter -->
+                            <!-- Org Code Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="🏭">Org Code</label>
-                                <select id="filterOrgCode" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterOrgCode-button" onclick="toggleGlobalFilter('filterOrgCode')">
+                                        <span class="excel-filter-button-text" id="filterOrgCode-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterOrgCode">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterOrgCode', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterOrgCode', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterOrgCode-options"></div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Shipping Status Filter -->
+                            <!-- Shipping Status Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="📦">Shipping Status</label>
-                                <select id="filterShippingStatus" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterShippingStatus-button" onclick="toggleGlobalFilter('filterShippingStatus')">
+                                        <span class="excel-filter-button-text" id="filterShippingStatus-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterShippingStatus">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterShippingStatus', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterShippingStatus', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterShippingStatus-options"></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Shipping Instruction Filter -->
@@ -1724,12 +1769,27 @@
                                     placeholder="Search instruction...">
                             </div>
 
-                            <!-- UOM Filter -->
+                            <!-- UOM Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="⚖️">UOM</label>
-                                <select id="filterUOM" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterUOM-button" onclick="toggleGlobalFilter('filterUOM')">
+                                        <span class="excel-filter-button-text" id="filterUOM-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterUOM">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterUOM', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterUOM', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterUOM-options"></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Item Filter -->
@@ -1750,36 +1810,96 @@
                                 </div>
                             </div>
 
-                            <!-- Stock Status Filter -->
+                            <!-- Stock Status Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="📊">Stock Status</label>
-                                <select id="filterStockStatus" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterStockStatus-button" onclick="toggleGlobalFilter('filterStockStatus')">
+                                        <span class="excel-filter-button-text" id="filterStockStatus-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterStockStatus">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterStockStatus', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterStockStatus', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterStockStatus-options"></div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Comments Filter -->
+                            <!-- Comments Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="💬">Comments</label>
-                                <select id="filterComments" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterComments-button" onclick="toggleGlobalFilter('filterComments')">
+                                        <span class="excel-filter-button-text" id="filterComments-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterComments">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterComments', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterComments', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterComments-options"></div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Action For Filter -->
+                            <!-- Action For Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="🎯">Action For</label>
-                                <select id="filterActionFor" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterActionFor-button" onclick="toggleGlobalFilter('filterActionFor')">
+                                        <span class="excel-filter-button-text" id="filterActionFor-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterActionFor">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterActionFor', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterActionFor', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterActionFor-options"></div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Aramco or Not Filter -->
+                            <!-- Aramco or Not Filter - Multiselect -->
                             <div class="filter-group">
                                 <label class="filter-label" data-icon="🏭">Aramco or Not</label>
-                                <select id="filterAramcoOrNot" class="filter-select">
-                                    <option value="">All</option>
-                                </select>
+                                <div class="excel-filter-container">
+                                    <button class="excel-filter-button" id="filterAramcoOrNot-button" onclick="toggleGlobalFilter('filterAramcoOrNot')">
+                                        <span class="excel-filter-button-text" id="filterAramcoOrNot-text">All selected</span>
+                                        <span class="excel-filter-arrow">▼</span>
+                                    </button>
+                                    <div class="excel-filter-dropdown" id="filterAramcoOrNot">
+                                        <div class="excel-filter-search">
+                                            <input type="text" placeholder="Search..." onkeyup="searchGlobalFilter('filterAramcoOrNot', this.value)">
+                                        </div>
+                                        <div class="excel-filter-select-all">
+                                            <label>
+                                                <input type="checkbox" checked onchange="toggleAllGlobalOptions('filterAramcoOrNot', this.checked)">
+                                                <span>(Select All)</span>
+                                            </label>
+                                        </div>
+                                        <div class="excel-filter-options" id="filterAramcoOrNot-options"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -2360,6 +2480,64 @@
                     }
                 });
                 charts = {};
+
+                // Reset all global allocation filter dropdowns
+                const multiselectFilters = ['filterCOB', 'filterOrgCode', 'filterShippingStatus', 'filterUOM',
+                                           'filterStockStatus', 'filterComments', 'filterActionFor', 'filterAramcoOrNot'];
+
+                multiselectFilters.forEach(filterId => {
+                    // Clear options
+                    const optionsContainer = document.getElementById(`${filterId}-options`);
+                    if (optionsContainer) {
+                        optionsContainer.innerHTML = '';
+                    }
+
+                    // Reset button text
+                    const buttonText = document.getElementById(`${filterId}-text`);
+                    if (buttonText) {
+                        buttonText.textContent = 'All selected';
+                    }
+
+                    // Close dropdown
+                    const dropdown = document.getElementById(filterId);
+                    if (dropdown) {
+                        dropdown.classList.remove('show');
+                    }
+
+                    const button = document.getElementById(`${filterId}-button`);
+                    if (button) {
+                        button.classList.remove('active');
+                    }
+                });
+
+                // Reset active filters
+                activeFilters = {
+                    releaseDateFrom: null,
+                    releaseDateTo: null,
+                    orderNumber: '',
+                    customer: '',
+                    cob: [],
+                    orgCode: [],
+                    shippingStatus: [],
+                    shippingInstruction: '',
+                    uom: [],
+                    item: '',
+                    qtyMin: null,
+                    qtyMax: null,
+                    stockStatus: [],
+                    comments: [],
+                    actionFor: [],
+                    aramcoOrNot: []
+                };
+
+                // Clear text inputs
+                const textInputs = ['filterReleaseDateFrom', 'filterReleaseDateTo', 'filterOrderNumber',
+                                   'filterCustomer', 'filterShippingInstruction', 'filterItem',
+                                   'filterQtyMin', 'filterQtyMax'];
+                textInputs.forEach(inputId => {
+                    const input = document.getElementById(inputId);
+                    if (input) input.value = '';
+                });
                 // ============================================
 
                 console.log('Processing orders file:', ordersFile.name);
@@ -3849,18 +4027,18 @@
             releaseDateTo: null,
             orderNumber: '',
             customer: '',
-            cob: '',
-            orgCode: '',
-            shippingStatus: '',
+            cob: [],
+            orgCode: [],
+            shippingStatus: [],
             shippingInstruction: '',
-            uom: '',
+            uom: [],
             item: '',
             qtyMin: null,
             qtyMax: null,
-            stockStatus: '',
-            comments: '',
-            actionFor: '',
-            aramcoOrNot: ''
+            stockStatus: [],
+            comments: [],
+            actionFor: [],
+            aramcoOrNot: []
         };
 
         function initializeFilters() {
@@ -3882,7 +4060,7 @@
 
             holdFreeOrdersProcessed.forEach(order => {
                 let value;
-                if (fieldKey === 'Stock Status' || fieldKey === 'Comments' || fieldKey === 'Action For') {
+                if (fieldKey === 'Stock Status' || fieldKey === 'Comments' || fieldKey === 'Action For' || fieldKey === 'Aramco or Not') {
                     value = order[fieldKey];
                 } else {
                     value = getColumnValue(order, [fieldKey, fieldKey.replace('_', ' ')]);
@@ -3893,18 +4071,110 @@
                 }
             });
 
-            const select = document.getElementById(elementId);
-            if (!select) return;
+            const optionsContainer = document.getElementById(`${elementId}-options`);
+            if (!optionsContainer) return;
 
-            select.innerHTML = '<option value="">All</option>';
+            // Clear existing options
+            optionsContainer.innerHTML = '';
 
-            Array.from(uniqueValues).sort().forEach(value => {
-                const option = document.createElement('option');
-                option.value = value;
-                option.textContent = value;
-                select.appendChild(option);
+            // Populate with new options
+            const sortedValues = Array.from(uniqueValues).sort();
+            sortedValues.forEach(value => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'excel-filter-option';
+                optionDiv.setAttribute('data-value', value);
+                optionDiv.innerHTML = `
+                    <label>
+                        <input type="checkbox" checked value="${value}" data-filter="${elementId}" onchange="updateGlobalFilterSelection('${elementId}')">
+                        <span>${value}</span>
+                    </label>
+                `;
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Update button text
+            updateGlobalFilterSelection(elementId);
+        }
+
+        // Toggle global filter dropdown
+        function toggleGlobalFilter(filterId) {
+            const dropdown = document.getElementById(filterId);
+            const button = document.getElementById(`${filterId}-button`);
+
+            // Close all other dropdowns
+            document.querySelectorAll('.excel-filter-dropdown').forEach(dd => {
+                if (dd.id !== filterId) {
+                    dd.classList.remove('show');
+                    const btn = document.getElementById(`${dd.id}-button`);
+                    if (btn) btn.classList.remove('active');
+                }
+            });
+
+            // Toggle this dropdown
+            dropdown.classList.toggle('show');
+            button.classList.toggle('active');
+        }
+
+        // Search within global filter options
+        function searchGlobalFilter(filterId, searchTerm) {
+            const options = document.querySelectorAll(`#${filterId}-options .excel-filter-option`);
+            const term = searchTerm.toLowerCase();
+
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                option.style.display = text.includes(term) ? '' : 'none';
             });
         }
+
+        // Toggle all options in global filter
+        function toggleAllGlobalOptions(filterId, checked) {
+            const checkboxes = document.querySelectorAll(`#${filterId}-options input[type="checkbox"]`);
+            checkboxes.forEach(cb => {
+                const parent = cb.closest('.excel-filter-option');
+                if (parent.style.display !== 'none') {
+                    cb.checked = checked;
+                }
+            });
+            updateGlobalFilterSelection(filterId);
+        }
+
+        // Update global filter selection display
+        function updateGlobalFilterSelection(filterId) {
+            const checkboxes = document.querySelectorAll(`#${filterId}-options input[type="checkbox"]`);
+            const selectAllCheckbox = document.querySelector(`#${filterId} .excel-filter-select-all input[type="checkbox"]`);
+            const buttonText = document.getElementById(`${filterId}-text`);
+
+            const totalCount = checkboxes.length;
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = checkedCount === totalCount;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+            }
+
+            if (checkedCount === 0) {
+                buttonText.textContent = 'None selected';
+            } else if (checkedCount === totalCount) {
+                buttonText.textContent = 'All selected';
+            } else {
+                buttonText.textContent = `${checkedCount} of ${totalCount} selected`;
+            }
+
+            // Apply filters when selection changes
+            applyFilters();
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.excel-filter-container')) {
+                document.querySelectorAll('.excel-filter-dropdown').forEach(dd => {
+                    dd.classList.remove('show');
+                });
+                document.querySelectorAll('.excel-filter-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            }
+        });
 
         function attachFilterListeners() {
             document.getElementById('filterReleaseDateFrom')?.addEventListener('change', applyFilters);
@@ -3915,14 +4185,7 @@
             document.getElementById('filterShippingInstruction')?.addEventListener('input', debounce(applyFilters, 300));
             document.getElementById('filterItem')?.addEventListener('input', debounce(applyFilters, 300));
 
-            document.getElementById('filterCOB')?.addEventListener('change', applyFilters);
-            document.getElementById('filterOrgCode')?.addEventListener('change', applyFilters);
-            document.getElementById('filterShippingStatus')?.addEventListener('change', applyFilters);
-            document.getElementById('filterUOM')?.addEventListener('change', applyFilters);
-            document.getElementById('filterStockStatus')?.addEventListener('change', applyFilters);
-            document.getElementById('filterComments')?.addEventListener('change', applyFilters);
-            document.getElementById('filterActionFor')?.addEventListener('change', applyFilters);
-            document.getElementById('filterAramcoOrNot')?.addEventListener('change', applyFilters);
+            // Multiselect filters are handled by updateGlobalFilterSelection, no need for listeners here
 
             document.getElementById('filterQtyMin')?.addEventListener('input', debounce(applyFilters, 300));
             document.getElementById('filterQtyMax')?.addEventListener('input', debounce(applyFilters, 300));
@@ -3941,23 +4204,29 @@
         }
 
         function applyFilters() {
+            // Helper function to get selected values from multiselect
+            const getSelectedValues = (filterId) => {
+                const checkboxes = document.querySelectorAll(`#${filterId}-options input[type="checkbox"]:checked`);
+                return Array.from(checkboxes).map(cb => cb.value);
+            };
+
             activeFilters = {
                 releaseDateFrom: document.getElementById('filterReleaseDateFrom')?.value || null,
                 releaseDateTo: document.getElementById('filterReleaseDateTo')?.value || null,
                 orderNumber: document.getElementById('filterOrderNumber')?.value.toLowerCase().trim() || '',
                 customer: document.getElementById('filterCustomer')?.value.toLowerCase().trim() || '',
-                cob: document.getElementById('filterCOB')?.value || '',
-                orgCode: document.getElementById('filterOrgCode')?.value || '',
-                shippingStatus: document.getElementById('filterShippingStatus')?.value || '',
+                cob: getSelectedValues('filterCOB'),
+                orgCode: getSelectedValues('filterOrgCode'),
+                shippingStatus: getSelectedValues('filterShippingStatus'),
                 shippingInstruction: document.getElementById('filterShippingInstruction')?.value.toLowerCase().trim() || '',
-                uom: document.getElementById('filterUOM')?.value || '',
+                uom: getSelectedValues('filterUOM'),
                 item: document.getElementById('filterItem')?.value.toLowerCase().trim() || '',
                 qtyMin: parseFloat(document.getElementById('filterQtyMin')?.value) || null,
                 qtyMax: parseFloat(document.getElementById('filterQtyMax')?.value) || null,
-                stockStatus: document.getElementById('filterStockStatus')?.value || '',
-                comments: document.getElementById('filterComments')?.value || '',
-                actionFor: document.getElementById('filterActionFor')?.value || '',
-                aramcoOrNot: document.getElementById('filterAramcoOrNot')?.value || ''
+                stockStatus: getSelectedValues('filterStockStatus'),
+                comments: getSelectedValues('filterComments'),
+                actionFor: getSelectedValues('filterActionFor'),
+                aramcoOrNot: getSelectedValues('filterAramcoOrNot')
             };
 
             const filteredOrders = filterOrders();
@@ -3993,19 +4262,19 @@
                     if (!customer.includes(activeFilters.customer)) return false;
                 }
 
-                if (activeFilters.cob) {
+                if (activeFilters.cob && activeFilters.cob.length > 0) {
                     const cob = String(getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '');
-                    if (cob !== activeFilters.cob) return false;
+                    if (!activeFilters.cob.includes(cob)) return false;
                 }
 
-                if (activeFilters.orgCode) {
+                if (activeFilters.orgCode && activeFilters.orgCode.length > 0) {
                     const orgCode = String(getColumnValue(order, ['ORGANIZATION_CODE', 'Organization Code', 'ORG_CODE']) || '');
-                    if (orgCode !== activeFilters.orgCode) return false;
+                    if (!activeFilters.orgCode.includes(orgCode)) return false;
                 }
 
-                if (activeFilters.shippingStatus) {
+                if (activeFilters.shippingStatus && activeFilters.shippingStatus.length > 0) {
                     const shippingStatus = String(getColumnValue(order, ['SHIPPING_STATUS', 'Shipping Status', 'SHIPPING STATUS']) || '');
-                    if (shippingStatus !== activeFilters.shippingStatus) return false;
+                    if (!activeFilters.shippingStatus.includes(shippingStatus)) return false;
                 }
 
                 if (activeFilters.shippingInstruction) {
@@ -4013,9 +4282,9 @@
                     if (!instruction.includes(activeFilters.shippingInstruction)) return false;
                 }
 
-                if (activeFilters.uom) {
+                if (activeFilters.uom && activeFilters.uom.length > 0) {
                     const uom = String(getColumnValue(order, ['UOM1', 'UOM', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '');
-                    if (uom !== activeFilters.uom) return false;
+                    if (!activeFilters.uom.includes(uom)) return false;
                 }
 
                 if (activeFilters.item) {
@@ -4027,20 +4296,24 @@
                 if (activeFilters.qtyMin !== null && qtyMT < activeFilters.qtyMin) return false;
                 if (activeFilters.qtyMax !== null && qtyMT > activeFilters.qtyMax) return false;
 
-                if (activeFilters.stockStatus) {
-                    if (order['Stock Status'] !== activeFilters.stockStatus) return false;
+                if (activeFilters.stockStatus && activeFilters.stockStatus.length > 0) {
+                    const stockStatus = String(order['Stock Status'] || '');
+                    if (!activeFilters.stockStatus.includes(stockStatus)) return false;
                 }
 
-                if (activeFilters.comments) {
-                    if (order['Comments'] !== activeFilters.comments) return false;
+                if (activeFilters.comments && activeFilters.comments.length > 0) {
+                    const comments = String(order['Comments'] || '');
+                    if (!activeFilters.comments.includes(comments)) return false;
                 }
 
-                if (activeFilters.actionFor) {
-                    if (order['Action For'] !== activeFilters.actionFor) return false;
+                if (activeFilters.actionFor && activeFilters.actionFor.length > 0) {
+                    const actionFor = String(order['Action For'] || '');
+                    if (!activeFilters.actionFor.includes(actionFor)) return false;
                 }
 
-                if (activeFilters.aramcoOrNot) {
-                    if (order['Aramco or Not'] !== activeFilters.aramcoOrNot) return false;
+                if (activeFilters.aramcoOrNot && activeFilters.aramcoOrNot.length > 0) {
+                    const aramcoOrNot = String(order['Aramco or Not'] || '');
+                    if (!activeFilters.aramcoOrNot.includes(aramcoOrNot)) return false;
                 }
 
                 return true;
@@ -4132,40 +4405,58 @@
         }
 
         function clearAllFilters() {
+            // Clear text and date inputs
             document.getElementById('filterReleaseDateFrom').value = '';
             document.getElementById('filterReleaseDateTo').value = '';
             document.getElementById('filterOrderNumber').value = '';
             document.getElementById('filterCustomer').value = '';
-            document.getElementById('filterCOB').value = '';
-            document.getElementById('filterOrgCode').value = '';
-            document.getElementById('filterShippingStatus').value = '';
             document.getElementById('filterShippingInstruction').value = '';
-            document.getElementById('filterUOM').value = '';
             document.getElementById('filterItem').value = '';
             document.getElementById('filterQtyMin').value = '';
             document.getElementById('filterQtyMax').value = '';
-            document.getElementById('filterStockStatus').value = '';
-            document.getElementById('filterComments').value = '';
-            document.getElementById('filterActionFor').value = '';
-            document.getElementById('filterAramcoOrNot').value = '';
+
+            // Reset all multiselect filters
+            const multiselectFilters = ['filterCOB', 'filterOrgCode', 'filterShippingStatus', 'filterUOM',
+                                       'filterStockStatus', 'filterComments', 'filterActionFor', 'filterAramcoOrNot'];
+
+            multiselectFilters.forEach(filterId => {
+                // Check all checkboxes
+                const checkboxes = document.querySelectorAll(`#${filterId}-options input[type="checkbox"]`);
+                checkboxes.forEach(cb => cb.checked = true);
+
+                // Update select all checkbox
+                const selectAllCheckbox = document.querySelector(`#${filterId} .excel-filter-select-all input[type="checkbox"]`);
+                if (selectAllCheckbox) selectAllCheckbox.checked = true;
+
+                // Update button text
+                const buttonText = document.getElementById(`${filterId}-text`);
+                if (buttonText) buttonText.textContent = 'All selected';
+
+                // Close dropdown
+                const dropdown = document.getElementById(filterId);
+                if (dropdown) dropdown.classList.remove('show');
+
+                const button = document.getElementById(`${filterId}-button`);
+                if (button) button.classList.remove('active');
+            });
 
             activeFilters = {
                 releaseDateFrom: null,
                 releaseDateTo: null,
                 orderNumber: '',
                 customer: '',
-                cob: '',
-                orgCode: '',
-                shippingStatus: '',
+                cob: [],
+                orgCode: [],
+                shippingStatus: [],
                 shippingInstruction: '',
-                uom: '',
+                uom: [],
                 item: '',
                 qtyMin: null,
                 qtyMax: null,
-                stockStatus: '',
-                comments: '',
-                actionFor: '',
-                aramcoOrNot: ''
+                stockStatus: [],
+                comments: [],
+                actionFor: [],
+                aramcoOrNot: []
             };
 
             displayFilteredOrders(holdFreeOrdersProcessed);
