@@ -1771,7 +1771,8 @@
                 <div class="cancel-info">
                     ⚠️ Upload an Excel file with product names/descriptions that need to be cancelled.
                     Orders matching these items will have their status and comment set to "Order Need to Cancel".
-                    <br><strong>Format:</strong> Single column Excel with header "item description" followed by product names.
+                    <br><strong>Format:</strong> Single column Excel with header "item description" followed by product
+                    names.
                 </div>
 
                 <div class="cancel-upload-area" id="cancelUploadArea">
@@ -2304,8 +2305,10 @@
         let actualCOBs = [];
 
         const orgMapping = {
-            'JE0': { subInvs: ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL'], location: 'Jeddah' },
-            'JED': { subInvs: ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL'], location: 'Jeddah' },
+            'JE0': { subInvs: ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL', 'AKS'], location: 'Jeddah' },
+            'JED': { subInvs: ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL', 'AKS'], location: 'Jeddah' },
+            'TP0': { subInvs: ['AKS', 'JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL'], location: 'Jeddah' },
+
             'RY0': { subInvs: ['RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL'], location: 'Riyadh' },
             'RYD': { subInvs: ['RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL'], location: 'Riyadh' },
             'JU0': { subInvs: ['UFGP', 'UEXP', 'UFPE'], location: 'Dammam' },
@@ -4257,7 +4260,7 @@
         }
 
         function processMergedInventoryData() {
-            const targetSubInv = ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL',
+            const targetSubInv = ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL', 'AKS',
                 'RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL',
                 'UFGP', 'UEXP', 'UFPE',
                 'AFGP', 'AFPE'];
@@ -4289,7 +4292,7 @@
 
             console.log(`On-hand: ${onhandSubInventories.size} sub-inventories, ${onhandItems.size} items`);
 
-            const targetOrgCodes = ['JE0', 'RY0', 'JU0', 'AFG'];
+            const targetOrgCodes = ['JE0', 'RY0', 'JU0', 'AFG', 'TP0'];
             const intransitMap = new Map();
             const intransitOrgCodes = new Set();
             const intransitItems = new Set();
@@ -4956,7 +4959,7 @@
             uploadArea.classList.add('loaded');
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -4970,19 +4973,19 @@
                     jsonData.forEach(row => {
                         // Try different possible column names
                         const itemDesc = row['item description'] ||
-                                        row['Item Description'] ||
-                                        row['ITEM DESCRIPTION'] ||
-                                        row['Item_Description'] ||
-                                        row['ITEM_DESCRIPTION'] ||
-                                        row['product name'] ||
-                                        row['Product Name'] ||
-                                        row['PRODUCT_NAME'] ||
-                                        row['Product_Name'] ||
-                                        row['description'] ||
-                                        row['Description'] ||
-                                        row['DESCRIPTION'] ||
-                                        // If only one column, use the first value
-                                        Object.values(row)[0];
+                            row['Item Description'] ||
+                            row['ITEM DESCRIPTION'] ||
+                            row['Item_Description'] ||
+                            row['ITEM_DESCRIPTION'] ||
+                            row['product name'] ||
+                            row['Product Name'] ||
+                            row['PRODUCT_NAME'] ||
+                            row['Product_Name'] ||
+                            row['description'] ||
+                            row['Description'] ||
+                            row['DESCRIPTION'] ||
+                            // If only one column, use the first value
+                            Object.values(row)[0];
 
                         if (itemDesc && String(itemDesc).trim()) {
                             cancelItems.add(String(itemDesc).trim().toUpperCase());
@@ -5007,7 +5010,7 @@
                 }
             };
 
-            reader.onerror = function() {
+            reader.onerror = function () {
                 alert('Error reading the file.');
                 fileName.textContent = '';
                 uploadArea.classList.remove('loaded');
@@ -5042,7 +5045,7 @@
 
             // Attach event listeners for delete buttons
             document.querySelectorAll('.cancel-item-delete').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     const itemName = this.dataset.item;
                     deleteCancelItem(itemName);
                 });
@@ -5268,7 +5271,7 @@
             // Cancel Upload Area Click
             const cancelUploadArea = document.getElementById('cancelUploadArea');
             if (cancelUploadArea) {
-                cancelUploadArea.addEventListener('click', function() {
+                cancelUploadArea.addEventListener('click', function () {
                     document.getElementById('cancelFileInput').click();
                 });
             }
