@@ -3535,7 +3535,7 @@
 
             // First header row - Group headers
             html += '<tr>';
-            html += '<th class="header-main" colspan="17">ORDER INFORMATION</th>';
+            html += '<th class="header-main" colspan="18">ORDER INFORMATION</th>';
             html += '<th class="header-warehouse-jeddah" colspan="1">JEDDAH</th>';
             html += '<th class="header-warehouse-riyadh" colspan="1">RIYADH</th>';
             html += '<th class="header-warehouse-dammam" colspan="1">DAMMAM</th>';
@@ -3555,7 +3555,7 @@
             // Base columns
             const baseHeaders = ['#', 'Release Date', 'Order Number', 'Customer #', 'COB', 'Org Code',
                 'Shipping Status', 'Shipping Instruction', 'UOM', 'Item', 'Product Name',
-                'Original Qty', 'Qty MT', 'ARAMCO+RSU+PE+CW0+EA', 'Stock Status', 'Comments', 'Source Warehouse'];
+                'Original Qty', 'Qty MT', 'ARAMCO+RSU+PE+CW0+EA', 'Stock Status', 'Comments', 'Action For', 'Source Warehouse'];
             baseHeaders.forEach(h => {
                 html += `<th class="header-main">${h}</th>`;
             });
@@ -3618,6 +3618,7 @@
                 html += `<td>${order['Aramco or Not'] || ''}</td>`;
                 html += `<td class="${stockClass}">${stockStatus}</td>`;
                 html += `<td>${order['Comments'] || ''}</td>`;
+                html += `<td>${sourceWarehouse}</td>`;
                 html += `<td class="${sourceClass}">${sourceWarehouse}</td>`;
 
                 // Warehouse totals
