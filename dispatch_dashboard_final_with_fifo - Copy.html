@@ -3160,6 +3160,7 @@
                 processedOrder['Stock Status'] = '';
                 processedOrder['Comments'] = '';
                 processedOrder['Action For'] = '';
+                processedOrder['Source_Warehouse'] = '';
                 processedOrder['Aramco or Not'] = '';
                 processedOrder['Jeddah_Stock'] = 0;
                 processedOrder['Riyadh_Stock'] = 0;
@@ -3169,6 +3170,7 @@
                 processedOrder['Stock Status'] = '';
                 processedOrder['Comments'] = '';
                 processedOrder['Action For'] = '';
+                processedOrder['Source_Warehouse'] = '';
 
                 const cob1 = getColumnValue(order, ['COB', 'Class of Business', 'Business', 'BUSINESS']) || '';
                 const uom1 = getColumnValue(order, ['UOM1', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
@@ -3309,6 +3311,10 @@
                         }
                     }
                     processedOrder['Action For'] = location;
+                    // Store the exact source sub-inventories
+                    processedOrder['Source_Warehouse'] = allocationResult && allocationResult.sourceSubInventories
+                        ? allocationResult.sourceSubInventories.join(', ')
+                        : '';
                 } else {
                     if (!processedOrder['Stock Status']) {
                         processedOrder['Stock Status'] = 'In-sufficient Stock';
@@ -3358,11 +3364,12 @@
         }
 
         function deductFromInventory(itemNumber, location, quantity) {
-            if (!runningInventory[itemNumber]) return { usedInTransit: false, fullyAllocated: false };
+            if (!runningInventory[itemNumber]) return { usedInTransit: false, fullyAllocated: false, sourceSubInventories: [] };
 
             let remainingToDeduct = quantity;
             const itemInventory = runningInventory[itemNumber];
             let usedInTransit = false;
+            let sourceSubInventories = [];  // Track all sub-inventories used
 
             for (const [orgCode, config] of Object.entries(orgMapping)) {
                 if (config.location === location && remainingToDeduct > 0) {
@@ -3372,6 +3379,10 @@
                             const deductAmount = Math.min(itemInventory[subInv], remainingToDeduct);
                             itemInventory[subInv] -= deductAmount;
                             remainingToDeduct -= deductAmount;
+                            // Track this sub-inventory as a source
+                            if (!sourceSubInventories.includes(subInv)) {
+                                sourceSubInventories.push(subInv);
+                            }
                         }
                     }
 
@@ -3381,13 +3392,18 @@
                         itemInventory[orgCode] -= deductAmount;
                         remainingToDeduct -= deductAmount;
                         usedInTransit = true;  // Mark that in-transit stock was used
+                        // Track the in-transit org code as a source
+                        if (!sourceSubInventories.includes(orgCode)) {
+                            sourceSubInventories.push(orgCode + ' (In-Transit)');
+                        }
                     }
                 }
             }
 
             return {
                 usedInTransit: usedInTransit,
-                fullyAllocated: remainingToDeduct === 0
+                fullyAllocated: remainingToDeduct === 0,
+                sourceSubInventories: sourceSubInventories
             };
         }
         function displayOrderDetails() {
@@ -3595,11 +3611,12 @@
                 const uom = getColumnValue(order, ['UOM1', 'UOM', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
                 const formattedDate = releaseDate ? formatDate(releaseDate) : 'No Date';
                 const stockStatus = order['Stock Status'] || '';
-                const sourceWarehouse = order['Action For'] || '';
+                const actionFor = order['Action For'] || '';
+                const exactSourceWarehouse = order['Source_Warehouse'] || '';
 
                 const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
                 const stockClass = stockStatus === 'Stock Available' ? 'stock-available' : (stockStatus === 'In-sufficient Stock' ? 'stock-insufficient' : '');
-                const sourceClass = sourceWarehouse ? `source-${sourceWarehouse.toLowerCase()}` : '';
+                const sourceClass = actionFor ? `source-${actionFor.toLowerCase()}` : '';
 
                 html += `<tr class="${rowClass}">`;
                 html += `<td class="number">${index + 1}</td>`;
@@ -3618,8 +3635,8 @@
                 html += `<td>${order['Aramco or Not'] || ''}</td>`;
                 html += `<td class="${stockClass}">${stockStatus}</td>`;
                 html += `<td>${order['Comments'] || ''}</td>`;
-                html += `<td>${sourceWarehouse}</td>`;
-                html += `<td class="${sourceClass}">${sourceWarehouse}</td>`;
+                html += `<td>${actionFor}</td>`;
+                html += `<td class="${sourceClass}">${exactSourceWarehouse}</td>`;
 
                 // Warehouse totals
                 html += `<td class="number" style="background-color: #dbeafe;">${(order['Jeddah_Stock'] || 0).toFixed(0)}</td>`;
