@@ -3453,13 +3453,133 @@
         }
 
         function exportOrderDetails() {
-            let csvContent = "Order #,Release Date,Order Number,Customer #,COB,Org Code,Shipping Status,Shipping Instruction,UOM,Item,Product Name,Original Order Qty,Qty MT,ARAMCO+RSU+PE+CW0+EA,Stock Status,Comments,Action For,Jeddah Stock,Riyadh Stock,Dammam Stock,Abha Stock\n";
-
-            const escapeCsvField = (field) => {
-                const str = String(field).replace(/"/g, '""');
-                return `"${str}"`;
+            // Define all sub-inventories by warehouse for detailed breakdown
+            const allSubInventories = {
+                'Jeddah': ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL', 'AKS'],
+                'Riyadh': ['RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL'],
+                'Dammam': ['UFGP', 'UEXP', 'UFPE'],
+                'Abha': ['AFGP', 'AFPE']
             };
 
+            // In-transit org codes by warehouse
+            const inTransitCodes = {
+                'Jeddah': ['JE0', 'JED', 'TP0'],
+                'Riyadh': ['RY0', 'RYD'],
+                'Dammam': ['JU0', 'JUB'],
+                'Abha': ['AFG', 'DMM']
+            };
+
+            // Color scheme for warehouses
+            const warehouseColors = {
+                'Jeddah': { header: '#1e3a5f', subHeader: '#2563eb', light: '#dbeafe' },
+                'Riyadh': { header: '#14532d', subHeader: '#16a34a', light: '#dcfce7' },
+                'Dammam': { header: '#7c2d12', subHeader: '#ea580c', light: '#ffedd5' },
+                'Abha': { header: '#581c87', subHeader: '#9333ea', light: '#f3e8ff' }
+            };
+
+            // Helper function to get sub-inventory stock for an item
+            function getSubInventoryStock(itemNumber, subInv) {
+                if (!runningInventory[itemNumber]) return 0;
+                return runningInventory[itemNumber][subInv] || 0;
+            }
+
+            // Build HTML table with styling
+            let html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="UTF-8">
+                <!--[if gte mso 9]>
+                <xml>
+                    <x:ExcelWorkbook>
+                        <x:ExcelWorksheets>
+                            <x:ExcelWorksheet>
+                                <x:Name>Order Details</x:Name>
+                                <x:WorksheetOptions>
+                                    <x:FreezePanes/>
+                                    <x:FrozenNoSplit/>
+                                    <x:SplitHorizontal>2</x:SplitHorizontal>
+                                    <x:TopRowBottomPane>2</x:TopRowBottomPane>
+                                </x:WorksheetOptions>
+                            </x:ExcelWorksheet>
+                        </x:ExcelWorksheets>
+                    </x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
+                <style>
+                    table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; }
+                    th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; }
+                    .header-main { background-color: #1f2937; color: white; font-weight: bold; text-align: center; }
+                    .header-warehouse-jeddah { background-color: #1e3a5f; color: white; font-weight: bold; text-align: center; }
+                    .header-warehouse-riyadh { background-color: #14532d; color: white; font-weight: bold; text-align: center; }
+                    .header-warehouse-dammam { background-color: #7c2d12; color: white; font-weight: bold; text-align: center; }
+                    .header-warehouse-abha { background-color: #581c87; color: white; font-weight: bold; text-align: center; }
+                    .header-sub-jeddah { background-color: #2563eb; color: white; font-weight: bold; text-align: center; }
+                    .header-sub-riyadh { background-color: #16a34a; color: white; font-weight: bold; text-align: center; }
+                    .header-sub-dammam { background-color: #ea580c; color: white; font-weight: bold; text-align: center; }
+                    .header-sub-abha { background-color: #9333ea; color: white; font-weight: bold; text-align: center; }
+                    .header-intransit { background-color: #0891b2; color: white; font-weight: bold; text-align: center; }
+                    .row-even { background-color: #f9fafb; }
+                    .row-odd { background-color: #ffffff; }
+                    .stock-available { background-color: #dcfce7; }
+                    .stock-insufficient { background-color: #fee2e2; }
+                    .source-jeddah { background-color: #dbeafe; font-weight: bold; }
+                    .source-riyadh { background-color: #dcfce7; font-weight: bold; }
+                    .source-dammam { background-color: #ffedd5; font-weight: bold; }
+                    .source-abha { background-color: #f3e8ff; font-weight: bold; }
+                    .number { text-align: right; mso-number-format: "0"; }
+                    .decimal { text-align: right; mso-number-format: "0.00"; }
+                </style>
+            </head>
+            <body>
+            <table>`;
+
+            // First header row - Group headers
+            html += '<tr>';
+            html += '<th class="header-main" colspan="17">ORDER INFORMATION</th>';
+            html += '<th class="header-warehouse-jeddah" colspan="1">JEDDAH</th>';
+            html += '<th class="header-warehouse-riyadh" colspan="1">RIYADH</th>';
+            html += '<th class="header-warehouse-dammam" colspan="1">DAMMAM</th>';
+            html += '<th class="header-warehouse-abha" colspan="1">ABHA</th>';
+            html += `<th class="header-sub-jeddah" colspan="${allSubInventories['Jeddah'].length}">JEDDAH SUB-INVENTORIES</th>`;
+            html += `<th class="header-sub-riyadh" colspan="${allSubInventories['Riyadh'].length}">RIYADH SUB-INVENTORIES</th>`;
+            html += `<th class="header-sub-dammam" colspan="${allSubInventories['Dammam'].length}">DAMMAM SUB-INVENTORIES</th>`;
+            html += `<th class="header-sub-abha" colspan="${allSubInventories['Abha'].length}">ABHA SUB-INVENTORIES</th>`;
+            html += `<th class="header-intransit" colspan="${inTransitCodes['Jeddah'].length}">JEDDAH IN-TRANSIT</th>`;
+            html += `<th class="header-intransit" colspan="${inTransitCodes['Riyadh'].length}">RIYADH IN-TRANSIT</th>`;
+            html += `<th class="header-intransit" colspan="${inTransitCodes['Dammam'].length}">DAMMAM IN-TRANSIT</th>`;
+            html += `<th class="header-intransit" colspan="${inTransitCodes['Abha'].length}">ABHA IN-TRANSIT</th>`;
+            html += '</tr>';
+
+            // Second header row - Column headers
+            html += '<tr>';
+            // Base columns
+            const baseHeaders = ['#', 'Release Date', 'Order Number', 'Customer #', 'COB', 'Org Code',
+                'Shipping Status', 'Shipping Instruction', 'UOM', 'Item', 'Product Name',
+                'Original Qty', 'Qty MT', 'ARAMCO+RSU+PE+CW0+EA', 'Stock Status', 'Comments', 'Source Warehouse'];
+            baseHeaders.forEach(h => {
+                html += `<th class="header-main">${h}</th>`;
+            });
+
+            // Warehouse totals
+            html += '<th class="header-warehouse-jeddah">Total</th>';
+            html += '<th class="header-warehouse-riyadh">Total</th>';
+            html += '<th class="header-warehouse-dammam">Total</th>';
+            html += '<th class="header-warehouse-abha">Total</th>';
+
+            // Sub-inventory columns
+            allSubInventories['Jeddah'].forEach(s => html += `<th class="header-sub-jeddah">${s}</th>`);
+            allSubInventories['Riyadh'].forEach(s => html += `<th class="header-sub-riyadh">${s}</th>`);
+            allSubInventories['Dammam'].forEach(s => html += `<th class="header-sub-dammam">${s}</th>`);
+            allSubInventories['Abha'].forEach(s => html += `<th class="header-sub-abha">${s}</th>`);
+
+            // In-transit columns
+            inTransitCodes['Jeddah'].forEach(s => html += `<th class="header-intransit">${s}</th>`);
+            inTransitCodes['Riyadh'].forEach(s => html += `<th class="header-intransit">${s}</th>`);
+            inTransitCodes['Dammam'].forEach(s => html += `<th class="header-intransit">${s}</th>`);
+            inTransitCodes['Abha'].forEach(s => html += `<th class="header-intransit">${s}</th>`);
+            html += '</tr>';
+
+            // Data rows
             holdFreeOrdersProcessed.forEach((order, index) => {
                 const releaseDate = parseDate(getColumnValue(order, ['LAST_RELEASE_DATE', 'Last Release Date', 'RELEASE_DATE']));
                 const orderNumber = getColumnValue(order, ['ORDER_NO', 'ORDER_NUMBER', 'Order Number', 'ORDER NUMBER']) || '';
@@ -3473,40 +3593,98 @@
                 const shippingStatus = getColumnValue(order, ['SHIPPING_STATUS', 'Shipping Status', 'SHIPPING STATUS']) || '';
                 const shippingInstruction = getColumnValue(order, ['SHIPPING_INSTRUCTIONS', 'Shipping Instruction', 'SHIPPING INSTRUCTION']) || '';
                 const uom = getColumnValue(order, ['UOM1', 'UOM', 'Unit of Measure', 'UNIT_OF_MEASURE']) || '';
-
                 const formattedDate = releaseDate ? formatDate(releaseDate) : 'No Date';
+                const stockStatus = order['Stock Status'] || '';
+                const sourceWarehouse = order['Action For'] || '';
 
-                // Build the CSV row
-                csvContent += `${index + 1},`;
-                csvContent += `${escapeCsvField(formattedDate)},`;
-                csvContent += `${escapeCsvField(orderNumber)},`;
-                csvContent += `${escapeCsvField(customer)},`;
-                csvContent += `${escapeCsvField(cob)},`;
-                csvContent += `${escapeCsvField(orgCode)},`;
-                csvContent += `${escapeCsvField(shippingStatus)},`;
-                csvContent += `${escapeCsvField(shippingInstruction)},`;
-                csvContent += `${escapeCsvField(uom)},`;
-                csvContent += `${escapeCsvField(itemNumber)},`;
-                csvContent += `${escapeCsvField(productName)},`;
-                csvContent += `${originalOrderQty.toFixed(2)},`;
-                csvContent += `${qtyMT.toFixed(2)},`;
-                csvContent += `${escapeCsvField(order['Aramco or Not'] || '')},`;
-                csvContent += `${escapeCsvField(order['Stock Status'] || '')},`;
-                csvContent += `${escapeCsvField(order['Comments'] || '')},`;
-                csvContent += `${escapeCsvField(order['Action For'] || '')},`;
-                csvContent += `${(order['Jeddah_Stock'] || 0).toFixed(0)},`;
-                csvContent += `${(order['Riyadh_Stock'] || 0).toFixed(0)},`;
-                csvContent += `${(order['Dammam_Stock'] || 0).toFixed(0)},`;
-                csvContent += `${(order['Abha_Stock'] || 0).toFixed(0)}\n`;
+                const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
+                const stockClass = stockStatus === 'Stock Available' ? 'stock-available' : (stockStatus === 'In-sufficient Stock' ? 'stock-insufficient' : '');
+                const sourceClass = sourceWarehouse ? `source-${sourceWarehouse.toLowerCase()}` : '';
+
+                html += `<tr class="${rowClass}">`;
+                html += `<td class="number">${index + 1}</td>`;
+                html += `<td>${formattedDate}</td>`;
+                html += `<td>${orderNumber}</td>`;
+                html += `<td>${customer}</td>`;
+                html += `<td>${cob}</td>`;
+                html += `<td>${orgCode}</td>`;
+                html += `<td>${shippingStatus}</td>`;
+                html += `<td>${shippingInstruction}</td>`;
+                html += `<td>${uom}</td>`;
+                html += `<td>${itemNumber}</td>`;
+                html += `<td>${productName}</td>`;
+                html += `<td class="decimal">${originalOrderQty.toFixed(2)}</td>`;
+                html += `<td class="decimal">${qtyMT.toFixed(2)}</td>`;
+                html += `<td>${order['Aramco or Not'] || ''}</td>`;
+                html += `<td class="${stockClass}">${stockStatus}</td>`;
+                html += `<td>${order['Comments'] || ''}</td>`;
+                html += `<td class="${sourceClass}">${sourceWarehouse}</td>`;
+
+                // Warehouse totals
+                html += `<td class="number" style="background-color: #dbeafe;">${(order['Jeddah_Stock'] || 0).toFixed(0)}</td>`;
+                html += `<td class="number" style="background-color: #dcfce7;">${(order['Riyadh_Stock'] || 0).toFixed(0)}</td>`;
+                html += `<td class="number" style="background-color: #ffedd5;">${(order['Dammam_Stock'] || 0).toFixed(0)}</td>`;
+                html += `<td class="number" style="background-color: #f3e8ff;">${(order['Abha_Stock'] || 0).toFixed(0)}</td>`;
+
+                // Sub-inventory details - Jeddah
+                allSubInventories['Jeddah'].forEach(subInv => {
+                    const val = getSubInventoryStock(itemNumber, subInv);
+                    html += `<td class="number" style="background-color: #eff6ff;">${val.toFixed(0)}</td>`;
+                });
+
+                // Sub-inventory details - Riyadh
+                allSubInventories['Riyadh'].forEach(subInv => {
+                    const val = getSubInventoryStock(itemNumber, subInv);
+                    html += `<td class="number" style="background-color: #f0fdf4;">${val.toFixed(0)}</td>`;
+                });
+
+                // Sub-inventory details - Dammam
+                allSubInventories['Dammam'].forEach(subInv => {
+                    const val = getSubInventoryStock(itemNumber, subInv);
+                    html += `<td class="number" style="background-color: #fff7ed;">${val.toFixed(0)}</td>`;
+                });
+
+                // Sub-inventory details - Abha
+                allSubInventories['Abha'].forEach(subInv => {
+                    const val = getSubInventoryStock(itemNumber, subInv);
+                    html += `<td class="number" style="background-color: #faf5ff;">${val.toFixed(0)}</td>`;
+                });
+
+                // In-transit details - Jeddah
+                inTransitCodes['Jeddah'].forEach(orgCode => {
+                    const val = getSubInventoryStock(itemNumber, orgCode);
+                    html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
+                });
+
+                // In-transit details - Riyadh
+                inTransitCodes['Riyadh'].forEach(orgCode => {
+                    const val = getSubInventoryStock(itemNumber, orgCode);
+                    html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
+                });
+
+                // In-transit details - Dammam
+                inTransitCodes['Dammam'].forEach(orgCode => {
+                    const val = getSubInventoryStock(itemNumber, orgCode);
+                    html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
+                });
+
+                // In-transit details - Abha
+                inTransitCodes['Abha'].forEach(orgCode => {
+                    const val = getSubInventoryStock(itemNumber, orgCode);
+                    html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
+                });
+
+                html += '</tr>';
             });
 
-            const BOM = '\uFEFF';
-            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            html += '</table></body></html>';
 
+            // Download as Excel file
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'order_details_fifo_allocation.csv';
+            a.download = 'order_details_fifo_allocation.xls';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
