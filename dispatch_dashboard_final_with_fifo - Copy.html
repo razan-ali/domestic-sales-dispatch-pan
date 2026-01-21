@@ -3271,6 +3271,37 @@
                 let stockAvailable = false;
                 let location = '';
 
+                // Capture stock BEFORE allocation for display
+                processedOrder['Jeddah_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Jeddah');
+                processedOrder['Riyadh_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Riyadh');
+                processedOrder['Dammam_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Dammam');
+                processedOrder['Abha_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Abha');
+
+                // Capture all sub-inventory details BEFORE allocation
+                const subInvSnapshot = {};
+                const itemInv = runningInventory[itemNumber] || {};
+                // Jeddah sub-inventories
+                ['JFGP', 'JEXP', 'JMIL', 'JFPE', 'KFGP', 'JFGG', 'JSFL', 'AKS'].forEach(s => {
+                    subInvSnapshot[s] = itemInv[s] || 0;
+                });
+                // Riyadh sub-inventories
+                ['RFGP', 'REXP', 'RFPE', 'RFGG', 'RSFL'].forEach(s => {
+                    subInvSnapshot[s] = itemInv[s] || 0;
+                });
+                // Dammam sub-inventories
+                ['UFGP', 'UEXP', 'UFPE'].forEach(s => {
+                    subInvSnapshot[s] = itemInv[s] || 0;
+                });
+                // Abha sub-inventories
+                ['AFGP', 'AFPE'].forEach(s => {
+                    subInvSnapshot[s] = itemInv[s] || 0;
+                });
+                // In-transit codes
+                ['JE0', 'JED', 'TP0', 'RY0', 'RYD', 'JU0', 'JUB', 'AFG', 'DMM'].forEach(s => {
+                    subInvSnapshot[s] = itemInv[s] || 0;
+                });
+                processedOrder['SubInv_Snapshot'] = subInvSnapshot;
+
                 let locationPriority = [];
 
                 if (orgCode === 'JE0' || orgCode === 'JED' || orgCode === 'TP0') {
@@ -3325,11 +3356,6 @@
                         processedOrder['Comments'] = isEtaItem ? 'ETA: TBC' : 'ERD: TBC';
                     }
                 }
-
-                processedOrder['Jeddah_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Jeddah');
-                processedOrder['Riyadh_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Riyadh');
-                processedOrder['Dammam_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Dammam');
-                processedOrder['Abha_Stock'] = getAvailableQuantityForLocation(itemNumber, 'Abha');
 
                 // CRITICAL: Overwrite comments for In-sufficient Stock EXCEPT "Hold by Sales"
                 if (processedOrder['Stock Status'] === 'In-sufficient Stock') {
@@ -3493,12 +3519,6 @@
                 'Abha': { header: '#581c87', subHeader: '#9333ea', light: '#f3e8ff' }
             };
 
-            // Helper function to get sub-inventory stock for an item
-            function getSubInventoryStock(itemNumber, subInv) {
-                if (!runningInventory[itemNumber]) return 0;
-                return runningInventory[itemNumber][subInv] || 0;
-            }
-
             // Build HTML table with styling
             let html = `
             <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -3644,51 +3664,54 @@
                 html += `<td class="number" style="background-color: #ffedd5;">${(order['Dammam_Stock'] || 0).toFixed(0)}</td>`;
                 html += `<td class="number" style="background-color: #f3e8ff;">${(order['Abha_Stock'] || 0).toFixed(0)}</td>`;
 
-                // Sub-inventory details - Jeddah
+                // Get the snapshot of sub-inventory values (captured BEFORE allocation)
+                const snapshot = order['SubInv_Snapshot'] || {};
+
+                // Sub-inventory details - Jeddah (from snapshot)
                 allSubInventories['Jeddah'].forEach(subInv => {
-                    const val = getSubInventoryStock(itemNumber, subInv);
+                    const val = snapshot[subInv] || 0;
                     html += `<td class="number" style="background-color: #eff6ff;">${val.toFixed(0)}</td>`;
                 });
 
-                // Sub-inventory details - Riyadh
+                // Sub-inventory details - Riyadh (from snapshot)
                 allSubInventories['Riyadh'].forEach(subInv => {
-                    const val = getSubInventoryStock(itemNumber, subInv);
+                    const val = snapshot[subInv] || 0;
                     html += `<td class="number" style="background-color: #f0fdf4;">${val.toFixed(0)}</td>`;
                 });
 
-                // Sub-inventory details - Dammam
+                // Sub-inventory details - Dammam (from snapshot)
                 allSubInventories['Dammam'].forEach(subInv => {
-                    const val = getSubInventoryStock(itemNumber, subInv);
+                    const val = snapshot[subInv] || 0;
                     html += `<td class="number" style="background-color: #fff7ed;">${val.toFixed(0)}</td>`;
                 });
 
-                // Sub-inventory details - Abha
+                // Sub-inventory details - Abha (from snapshot)
                 allSubInventories['Abha'].forEach(subInv => {
-                    const val = getSubInventoryStock(itemNumber, subInv);
+                    const val = snapshot[subInv] || 0;
                     html += `<td class="number" style="background-color: #faf5ff;">${val.toFixed(0)}</td>`;
                 });
 
-                // In-transit details - Jeddah
-                inTransitCodes['Jeddah'].forEach(orgCode => {
-                    const val = getSubInventoryStock(itemNumber, orgCode);
+                // In-transit details - Jeddah (from snapshot)
+                inTransitCodes['Jeddah'].forEach(code => {
+                    const val = snapshot[code] || 0;
                     html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
                 });
 
-                // In-transit details - Riyadh
-                inTransitCodes['Riyadh'].forEach(orgCode => {
-                    const val = getSubInventoryStock(itemNumber, orgCode);
+                // In-transit details - Riyadh (from snapshot)
+                inTransitCodes['Riyadh'].forEach(code => {
+                    const val = snapshot[code] || 0;
                     html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
                 });
 
-                // In-transit details - Dammam
-                inTransitCodes['Dammam'].forEach(orgCode => {
-                    const val = getSubInventoryStock(itemNumber, orgCode);
+                // In-transit details - Dammam (from snapshot)
+                inTransitCodes['Dammam'].forEach(code => {
+                    const val = snapshot[code] || 0;
                     html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
                 });
 
-                // In-transit details - Abha
-                inTransitCodes['Abha'].forEach(orgCode => {
-                    const val = getSubInventoryStock(itemNumber, orgCode);
+                // In-transit details - Abha (from snapshot)
+                inTransitCodes['Abha'].forEach(code => {
+                    const val = snapshot[code] || 0;
                     html += `<td class="number" style="background-color: #ecfeff;">${val.toFixed(0)}</td>`;
                 });
 
