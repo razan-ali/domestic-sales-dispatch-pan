@@ -3564,6 +3564,7 @@
                     .source-abha { background-color: #f3e8ff; font-weight: bold; }
                     .number { text-align: right; mso-number-format: "0"; }
                     .decimal { text-align: right; mso-number-format: "0.00"; }
+                    .text-code { mso-number-format: "\@"; }
                 </style>
             </head>
             <body>
@@ -3641,14 +3642,14 @@
                 html += `<tr class="${rowClass}">`;
                 html += `<td class="number">${index + 1}</td>`;
                 html += `<td>${formattedDate}</td>`;
-                html += `<td>${orderNumber}</td>`;
-                html += `<td>${customer}</td>`;
+                html += `<td class="text-code">${orderNumber}</td>`;
+                html += `<td class="text-code">${customer}</td>`;
                 html += `<td>${cob}</td>`;
-                html += `<td>${orgCode}</td>`;
+                html += `<td class="text-code">${orgCode}</td>`;
                 html += `<td>${shippingStatus}</td>`;
                 html += `<td>${shippingInstruction}</td>`;
                 html += `<td>${uom}</td>`;
-                html += `<td>${itemNumber}</td>`;
+                html += `<td class="text-code">${itemNumber}</td>`;
                 html += `<td>${productName}</td>`;
                 html += `<td class="decimal">${originalOrderQty.toFixed(2)}</td>`;
                 html += `<td class="decimal">${qtyMT.toFixed(2)}</td>`;
